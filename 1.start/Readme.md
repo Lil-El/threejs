@@ -2,6 +2,20 @@
 
 ---
 
+## Es Module
+
+- importmap: 指定引入的包的路径
+
+```html
+<script type="importmap">
+    {
+        "imports": {
+            "three": "/node_modules/three/build/three.module.js"
+        }
+    }
+</script>
+```
+
 ## 坐标系
 
 x、y：屏幕长、宽

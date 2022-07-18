@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="../assets/style/common.css" />
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div id="control-container">
+                <h1>Controller</h1>
+                <hr />
+                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="120" name="xAxis" /></div>
+                <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="30" name="yAxis" /></div>
+                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="515" name="zAxis" /></div>
+            </div>
+            <div id="three-container"></div>
+        </div>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            import { FontLoader } from "/node_modules/three/examples/jsm/loaders/FontLoader.js";
+            import { TextGeometry } from "/node_modules/three/examples/jsm/geometries/TextGeometry.js";
+
+            const container = $("#three-container");
+            const containerWidth = container.innerWidth();
+            const containerHeight = container.innerHeight();
+            const scene = new THREE.Scene();
+
+            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+
+            renderer.setSize(containerWidth, containerHeight, false);
+
+            container.append(renderer.domElement);
+
+            // 创建材质
+            const material = new THREE.LineDashedMaterial({ color: 0xff0000 });
+            // 创建几何体
+            const loader = new FontLoader();
+            loader.load("../node_modules/three/examples/fonts/gentilis_bold.typeface.json", font => {
+                const geometry = new TextGeometry("Mino吖!", {
+                    font,
+                    size: 80,
+                    height: 5,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 10,
+                    bevelSize: 8,
+                    bevelSegments: 8,
+                });
+                geometry.computeBoundingBox();
+                const mesh = new THREE.Mesh(geometry, material);
+
+                mesh.position.x = 70;
+                mesh.position.y = 70;
+                mesh.position.z = 0;
+
+                mesh.rotation.y = Math.PI;
+
+                scene.add(mesh);
+            });
+
+            function setCameraPosition() {
+                const x = $("input[name=xAxis]").val();
+                const y = $("input[name=yAxis]").val();
+                const z = $("input[name=zAxis]").val();
+                camera.position.set(x, y, z);
+            }
+            function onChange() {
+                ["x", "y", "z"].forEach((item, _, arr) => {
+                    $(`input[name=${item}Axis]`).on("change", ev => {
+                        console.log("change");
+                        setCameraPosition();
+                    });
+                });
+                $(document).keydown(ev => {
+                    if (ev.key == "ArrowDown") {
+                        $("input[name=yAxis]").val(~~camera.position.y + 1);
+                    } else if (ev.key == "ArrowUp") {
+                        $("input[name=yAxis]").val(~~camera.position.y - 1);
+                    } else if (ev.key == "ArrowLeft") {
+                        $("input[name=xAxis]").val(~~camera.position.x + 1);
+                    } else if (ev.key == "ArrowRight") {
+                        $("input[name=xAxis]").val(~~camera.position.x - 1);
+                    }
+                    setCameraPosition();
+                });
+                $(document).on("mousewheel", ev => {
+                    $("input[name=zAxis]").val(~~camera.position.z + parseFloat(ev.originalEvent.deltaY / 100));
+                    setCameraPosition();
+                });
+            }
+
+            /* 渲染场景 */
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    setCameraPosition();
+                    onChange();
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+            // https://threejs.org/examples/#webgl_geometry_text
+        </script>
+    </body>
+</html>
