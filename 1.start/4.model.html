@@ -13,9 +13,9 @@
             <div id="control-container">
                 <h1>Controller</h1>
                 <hr />
-                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="120" name="xAxis" /></div>
-                <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="30" name="yAxis" /></div>
-                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="515" name="zAxis" /></div>
+                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="0" name="xAxis" /></div>
+                <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
+                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="200" name="zAxis" /></div>
             </div>
             <div id="three-container"></div>
         </div>
@@ -28,46 +28,36 @@
         </script>
         <script type="module">
             import * as THREE from "three";
-            import { FontLoader } from "/node_modules/three/examples/jsm/loaders/FontLoader.js";
-            import { TextGeometry } from "/node_modules/three/examples/jsm/geometries/TextGeometry.js";
+            import { OBJLoader } from "/node_modules/three/examples/jsm/loaders/OBJLoader.js";
+            import { MTLLoader } from "/node_modules/three/examples/jsm/loaders/MTLLoader.js";
 
             const container = $("#three-container");
             const containerWidth = container.innerWidth();
             const containerHeight = container.innerHeight();
             const scene = new THREE.Scene();
 
-            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 1000);
+            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 2000);
             const renderer = new THREE.WebGLRenderer();
 
             renderer.setSize(containerWidth, containerHeight, false);
 
             container.append(renderer.domElement);
 
-            // 创建材质
-            const material = new THREE.LineDashedMaterial({ color: 0xff0000 });
-            // 创建几何体
-            const loader = new FontLoader();
-            loader.load("../node_modules/three/examples/fonts/helvetiker_regular.typeface.json", font => {
-                const geometry = new TextGeometry("M i n o", {
-                    font,
-                    size: 80,
-                    height: 5,
-                    curveSegments: 12,
-                    bevelEnabled: true,
-                    bevelThickness: 10,
-                    bevelSize: 8,
-                    bevelSegments: 8,
+            // 创建材质、obj的loader
+            const mtlLoader = new MTLLoader();
+            const objLoader = new OBJLoader();
+            mtlLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.mtl", material => {
+                objLoader.setMaterials(material);
+                objLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.obj", obj => {
+                    console.log(obj);
+                    obj.traverse(function (child) {
+                        if (child.isMesh) {
+                            child.position.set(0, 0, 0);
+                            // console.log(child);
+                        }
+                    });
+                    scene.add(obj);
                 });
-                // geometry.computeBoundingBox();
-                const mesh = new THREE.Mesh(geometry, material);
-
-                mesh.position.x = 70;
-                mesh.position.y = 70;
-                mesh.position.z = 0;
-
-                mesh.rotation.y = 2 * Math.PI;
-
-                scene.add(mesh);
             });
 
             function setCameraPosition() {
@@ -116,7 +106,6 @@
                     body.appendChild(warning);
                 }
             });
-            // TODO: https://threejs.org/examples/#webgl_geometry_text
         </script>
     </body>
 </html>

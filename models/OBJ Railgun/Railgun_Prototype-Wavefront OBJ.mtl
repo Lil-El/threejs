@@ -10,10 +10,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd ..\rail-gun prototype_nmap.jpg
-map_Bump ..\\rail-gun prototype_nmap.jpg
-map_Ks ..\\rail-gun prototype_rough.jpg
-refl ..\\ref.jpg
+map_Kd ./rail-gun prototype_nmap.jpg
+map_Bump ./rail-gun prototype_nmap.jpg
+map_Ks ./rail-gun prototype_rough.jpg
+refl ./ref.jpg
 
 newmtl T1_NONE
 Ns 200.000000
@@ -24,10 +24,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Bump ..\\rail-gun prototype_nmap.jpg
+map_Bump ./rail-gun prototype_nmap.jpg
 map_Kd ..\\..\\rail-gun prototype_color.jpg
-map_Ks ..\\rail-gun prototype_rough.jpg
-refl ..\\ref.jpg
+map_Ks ./rail-gun prototype_rough.jpg
+refl ./ref.jpg
 
 newmtl T2
 Ns 200.000000
@@ -38,10 +38,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Bump ..\\rail-gun prototype_T2_nmap.jpg
+map_Bump ./rail-gun prototype_T2_nmap.jpg
 map_Kd ..\\..\\rail-gun prototype_T2_color.jpg
 map_Ks ..\\..\\rail-gun prototype_T2_rough.jpg
-refl ..\\ref.jpg
+refl ./ref.jpg
 
 newmtl T3
 Ns 200.000000
@@ -52,7 +52,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Bump ..\\rail-gun prototype_T3_nmap.jpg
-map_Kd ..\\rail-gun prototype_T3_color.jpg
-map_Ks ..\\ref.jpg
-refl ..\\ref.jpg
+map_Bump ./rail-gun prototype_T3_nmap.jpg
+map_Kd ./rail-gun prototype_T3_color.jpg
+map_Ks ./ref.jpg
+refl ./ref.jpg
