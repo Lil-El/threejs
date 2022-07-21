@@ -10,12 +10,28 @@
     </head>
     <body>
         <div id="app">
-            <div id="control-container">
-                <h1>Controller</h1>
-                <hr />
-                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="-4" name="xAxis" /></div>
-                <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
-                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="8" name="zAxis" /></div>
+            <div id="control-container" class="mino-flex">
+                <div>
+                    <h1>Camera</h1>
+                    <hr />
+                    <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="-4" name="xAxis" /></div>
+                    <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
+                    <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="8" name="zAxis" /></div>
+                </div>
+                <div>
+                    <h1>Light</h1>
+                    <hr />
+                    <div><label for="pointLight">pointLight：</label><input type="color" value="#ffffff" name="pointLight" /></div>
+                </div>
+                <div>
+                    <h1>Update</h1>
+                    <hr />
+                    <div>
+                        <label for="isUpdate">isUpdate：</label>
+                        <input type="radio" name="isUpdate" value="Yes" checked /> Yes
+                        <input type="radio" name="isUpdate" value="No" /> No
+                    </div>
+                </div>
             </div>
             <div id="three-container"></div>
         </div>
@@ -40,19 +56,19 @@
             // 创建光源、环境光，并添加至scene中；
             /**
              *  可以将object3D添加至另一个object3D中，然后添加至scene中。
-             * 
+             *
              *  将object添加到camera，将camera加入scene中；
              *  camera.add(ambientLight);
              *  scene.add(pointLight);
              *  scene.add(camera);
              *  或者，将ambientLight加到pointLight中，然后pointLight加到scene中。
-             */ 
+             */
             const ambientLight = new THREE.AmbientLight(0x404040);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight( 0xffffff, 100 );
-            pointLight.position.set(-10, -10, 10)
+            const pointLight = new THREE.PointLight(0xffffff, 100);
+            pointLight.position.set(-10, -10, 10);
             scene.add(pointLight);
-            
+
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(containerWidth, containerHeight, false);
 
@@ -61,16 +77,18 @@
             // 创建材质、obj的loader
             const mtlLoader = new MTLLoader();
             const objLoader = new OBJLoader();
+            let gun;
             mtlLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.mtl", material => {
                 objLoader.setMaterials(material);
                 objLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.obj", obj => {
-                    obj.traverse(function (child) {
+                    gun = obj;
+                    gun.traverse(function (child) {
                         if (child.isMesh) {
                             child.position.set(0, 0, 0);
                             child.scale.set(10, 10, 10);
                         }
                     });
-                    scene.add(obj);
+                    scene.add(gun);
                 });
             });
 
@@ -102,6 +120,18 @@
                     $("input[name=zAxis]").val(~~camera.position.z + parseFloat(ev.originalEvent.deltaY / 100));
                     setCameraPosition();
                 });
+                $("input[name=pointLight]").on("change", ev => {
+                    const color = ev.target.value;
+                    pointLight.color.setHex(color.replace("#", "0x"));
+                })
+                $("input[name=isUpdate]").on("change", ev => {
+                    const isUpdate = ev.target.value;
+                    if(isUpdate == "Yes") {
+                        gun.updateMatrix();
+                    } else {
+                        gun.matrixAutoUpdate = false;
+                    }
+                })
             }
 
             /* 渲染场景 */

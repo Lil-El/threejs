@@ -19,3 +19,7 @@ body {
 #app #three-container {
     flex: 1;
 }
+.mino-flex {
+    display: flex;
+    column-gap: 20px;
+}
