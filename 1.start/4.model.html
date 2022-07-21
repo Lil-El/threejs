@@ -37,13 +37,23 @@
             const scene = new THREE.Scene();
 
             const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 100);
+            // 创建光源、环境光，并添加至scene中；
+            /**
+             *  可以将object3D添加至另一个object3D中，然后添加至scene中。
+             * 
+             *  将object添加到camera，将camera加入scene中；
+             *  camera.add(ambientLight);
+             *  scene.add(pointLight);
+             *  scene.add(camera);
+             *  或者，将ambientLight加到pointLight中，然后pointLight加到scene中。
+             */ 
             const ambientLight = new THREE.AmbientLight(0x404040);
             scene.add(ambientLight);
             const pointLight = new THREE.PointLight( 0xffffff, 100 );
             pointLight.position.set(-10, -10, 10)
             scene.add(pointLight);
+            
             const renderer = new THREE.WebGLRenderer();
-
             renderer.setSize(containerWidth, containerHeight, false);
 
             container.append(renderer.domElement);

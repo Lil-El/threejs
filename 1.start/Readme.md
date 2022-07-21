@@ -36,3 +36,24 @@
 ## 线性代数
 
 [线性代数](https://blog.csdn.net/web2022050901/article/details/124748693)
+
+## 场景更新
+
+默认情况下，所有对象都会自动更新它们的矩阵（如果它们已添加到场景中）
+
+```js
+const object = new THREE.Object3D();
+scene.add( object );或者它们是已添加到场景中的另一个对象的子节点:
+const object1 = new THREE.Object3D();
+const object2 = new THREE.Object3D();
+
+object1.add( object2 );
+scene.add( object1 ); //object1 和 object2 会自动更新它们的矩阵
+```
+
+但是，如果你知道对象将是静态的，则可以禁用此选项并在需要时手动更新转换矩阵。
+
+```js
+object.matrixAutoUpdate = false;
+object.updateMatrix();
+```
