@@ -13,9 +13,9 @@
             <div id="control-container">
                 <h1>Controller</h1>
                 <hr />
-                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="0" name="xAxis" /></div>
+                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="-4" name="xAxis" /></div>
                 <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
-                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="200" name="zAxis" /></div>
+                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="8" name="zAxis" /></div>
             </div>
             <div id="three-container"></div>
         </div>
@@ -36,7 +36,12 @@
             const containerHeight = container.innerHeight();
             const scene = new THREE.Scene();
 
-            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 2000);
+            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 100);
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight( 0xffffff, 100 );
+            pointLight.position.set(-10, -10, 10)
+            scene.add(pointLight);
             const renderer = new THREE.WebGLRenderer();
 
             renderer.setSize(containerWidth, containerHeight, false);
@@ -49,11 +54,10 @@
             mtlLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.mtl", material => {
                 objLoader.setMaterials(material);
                 objLoader.load("/models/OBJ Railgun/Railgun_Prototype-Wavefront OBJ.obj", obj => {
-                    console.log(obj);
                     obj.traverse(function (child) {
                         if (child.isMesh) {
                             child.position.set(0, 0, 0);
-                            // console.log(child);
+                            child.scale.set(10, 10, 10);
                         }
                     });
                     scene.add(obj);
@@ -69,7 +73,6 @@
             function onChange() {
                 ["x", "y", "z"].forEach((item, _, arr) => {
                     $(`input[name=${item}Axis]`).on("change", ev => {
-                        console.log("change");
                         setCameraPosition();
                     });
                 });
@@ -94,6 +97,7 @@
             /* 渲染场景 */
             function animate() {
                 requestAnimationFrame(animate);
+                // camera.lookAt(scene.position);
                 renderer.render(scene, camera);
             }
             import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
@@ -106,6 +110,8 @@
                     body.appendChild(warning);
                 }
             });
+
+            // https://threejs.org/examples/?q=light#webgl_lights_spotlight
         </script>
     </body>
 </html>
