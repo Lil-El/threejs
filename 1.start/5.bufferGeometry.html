@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="../assets/style/common.css" />
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div id="control-container" class="mino-flex">
+                <div>
+                    <h1>Camera</h1>
+                    <hr />
+                    <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="0" name="xAxis" /></div>
+                    <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
+                    <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="30" name="zAxis" /></div>
+                </div>
+                <div>
+                    <h1>DrawCount</h1>
+                    <hr />
+                    <div><label for="DrawCount">DrawCount：</label><input type="number" min="2" step="1" value="2" name="DrawCount" /></div>
+                </div>
+                <div>
+                    <h1>Update</h1>
+                    <hr />
+                    <div>
+                        <label for="isUpdate">isUpdate：</label>
+                        <input type="radio" name="isUpdate" value="Yes" checked /> Yes <input type="radio" name="isUpdate" value="No" /> No
+                    </div>
+                </div>
+            </div>
+            <div id="three-container"></div>
+        </div>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            // 要素对象创建
+            const container = $("#three-container");
+            const containerWidth = container.innerWidth();
+            const containerHeight = container.innerHeight();
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 100);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(containerWidth, containerHeight, false);
+            container.append(renderer.domElement);
+
+            /**
+             * BufferGeometry：
+             * 是面片、线或点几何体的有效表述。包括顶点位置，面片索引、法相量、颜色值、UV 坐标和自定义缓存属性值。
+             * 使用 BufferGeometry 可以有效减少向 GPU 传输上述数据所需的开销
+             */ 
+            const MAX_POINTS = 500;
+            const geometry = new THREE.BufferGeometry();
+            const position = new Float32Array(MAX_POINTS * 3); // 大小1500
+            geometry.setAttribute("position", new THREE.BufferAttribute(position, 3)); // 每3个为一组（表示x,y,z坐标）
+            /**
+             * drawRange属性：用于判断几何体的哪个部分需要被渲染
+             * 不可以直接设置，通过setDrawRange去设置
+             * setDrawRange(start: 0, count: Infinity);
+             * 
+             * line有1500个顶点，即每个顶点有三个坐标点；drawCount表示渲染到第n-1个顶点，所以：
+             * 值：2  =>  渲染了1条线
+             * 值：10 =>  渲染了9条线
+             * 
+             * 例：绘制一个矩形(由两个三角形（面片）构成，每三个点是一个三角形的顶点)
+             * Float32Array([
+             * 	 -1.0, -1.0,  1.0,
+             *   1.0, -1.0,  1.0,
+             *   1.0,  1.0,  1.0,
+             * 
+             *   1.0,  1.0,  1.0,
+             *   -1.0,  1.0,  1.0,
+             *   -1.0, -1.0,  1.0
+             * ])
+             */ 
+            const drawCount = 2;
+            geometry.setDrawRange(0, drawCount);
+            // 创建材质，几何
+            const material = new THREE.LineBasicMaterial({color: 0xff0000})
+            const line = new THREE.Line(geometry, material);
+            scene.add(line);
+            // position赋随机值
+            const positions = line.geometry.attributes.position.array;
+            let x, y, z, index;
+            x = y = z = index = 0;
+            for ( let i = 0, l = MAX_POINTS; i < l; i ++ ) {
+                positions[ index ++ ] = x;
+                positions[ index ++ ] = y;
+                positions[ index ++ ] = z;
+
+                x += ( Math.random() - 0.5 ) * 30;
+                y += ( Math.random() - 0.5 ) * 30;
+                z += ( Math.random() - 0.5 ) * 30;
+            }
+
+
+            // 控制方法
+            function setCameraPosition() {
+                const x = $("input[name=xAxis]").val();
+                const y = $("input[name=yAxis]").val();
+                const z = $("input[name=zAxis]").val();
+                camera.position.set(x, y, z);
+            }
+            function onChange() {
+                ["x", "y", "z"].forEach((item, _, arr) => {
+                    $(`input[name=${item}Axis]`).on("change", ev => {
+                        setCameraPosition();
+                    });
+                });
+                $(document).keydown(ev => {
+                    if (ev.key == "ArrowDown") {
+                        $("input[name=yAxis]").val(~~camera.position.y + 1);
+                    } else if (ev.key == "ArrowUp") {
+                        $("input[name=yAxis]").val(~~camera.position.y - 1);
+                    } else if (ev.key == "ArrowLeft") {
+                        $("input[name=xAxis]").val(~~camera.position.x + 1);
+                    } else if (ev.key == "ArrowRight") {
+                        $("input[name=xAxis]").val(~~camera.position.x - 1);
+                    }
+                    setCameraPosition();
+                });
+                $(document).on("mousewheel", ev => {
+                    $("input[name=zAxis]").val(~~camera.position.z + parseFloat(ev.originalEvent.deltaY / 100));
+                    setCameraPosition();
+                });
+                $("input[name=DrawCount]").on("change", ev => {
+                    const drawCount = ev.target.value;
+                    geometry.setDrawRange(0, drawCount);
+                });
+                $("input[name=isUpdate]").on("change", ev => {
+                    const isUpdate = ev.target.value;
+                    if (isUpdate == "Yes") {
+                        gun.updateMatrix();
+                    } else {
+                        gun.matrixAutoUpdate = false;
+                    }
+                });
+            }
+
+            /* 渲染场景 */
+            function animate() {
+                requestAnimationFrame(animate);
+                // camera.lookAt(scene.position);
+                renderer.render(scene, camera);
+            }
+            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    setCameraPosition();
+                    onChange();
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>
