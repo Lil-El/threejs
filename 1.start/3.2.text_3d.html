@@ -34,7 +34,7 @@
 
             THREE.Cache.enabled = true;
 
-            let container, stats, permalink, hex;
+            let container, stateContainer, stats, permalink, hex;
 
             let camera, cameraTarget, scene, renderer;
 
@@ -97,8 +97,8 @@
             }
 
             function init() {
-                container = document.getElementById("three-container")
-
+                container = document.getElementById("three-container");
+                stateContainer = document.getElementById("control-container");
                 permalink = document.getElementById("permalink");
 
                 // CAMERA
@@ -154,7 +154,7 @@
                 /* MeshPhongMaterial:一种用于具有镜面高光的光泽表面的材质 */
                 // 定义前面front和侧面side的材质
                 materials = [
-                    new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true, /* 高亮程度 */shininess: 30, /* 高光颜色 */specular: 0x0000ff/* 线框wireframe: true */ }), // front
+                    new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true, /* 高亮程度 */ shininess: 30, /* 高光颜色 */ specular: 0x0000ff /* 线框wireframe: true */ }), // front
                     new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }), // side
                 ];
 
@@ -164,30 +164,30 @@
 
                 scene.add(group);
 
-                loadFont(); // <---------上次浏览的位置---------
+                /* 加载font，渲染text和mirror text */
+                loadFont();
 
-                const plane = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000), new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true }));
+                /* 创建 平面的几何体（即镜面） */
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.3, transparent: true }));
                 plane.position.y = 100;
                 plane.rotation.x = -Math.PI / 2;
                 scene.add(plane);
 
                 // RENDERER
-
                 renderer = new THREE.WebGLRenderer({ antialias: true });
                 renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 container.appendChild(renderer.domElement);
 
-                // STATS
 
+                // STATS: 统计；创建统计面板
                 stats = new Stats();
-                //container.appendChild( stats.dom );
+                stateContainer.appendChild(stats.dom);
+
 
                 // EVENTS
-
                 container.style.touchAction = "none";
                 container.addEventListener("pointerdown", onPointerDown);
-
                 document.addEventListener("keypress", onDocumentKeyPress);
                 document.addEventListener("keydown", onDocumentKeyDown);
 
@@ -222,8 +222,6 @@
                     refreshText();
                 });
 
-                //
-
                 window.addEventListener("resize", onWindowResize);
             }
 
@@ -235,8 +233,6 @@
 
                 renderer.setSize(window.innerWidth, window.innerHeight);
             }
-
-            //
 
             function boolToNum(b) {
                 return b ? 1 : 0;
@@ -346,32 +342,28 @@
                 createText();
             }
 
+            /* 
+                假设：屏幕中心点为0，左边是-500，右边是500
+             */
             function onPointerDown(event) {
-                if (event.isPrimary === false) return;
-
                 pointerXOnPointerDown = event.clientX - windowHalfX;
-                targetRotationOnPointerDown = targetRotation;
+                targetRotationOnPointerDown = targetRotation; // 将上次旋转的度数赋值，基于这个计算新的旋转角度
 
                 document.addEventListener("pointermove", onPointerMove);
                 document.addEventListener("pointerup", onPointerUp);
             }
 
+            /* 0.02 == 1.5度 */
             function onPointerMove(event) {
-                if (event.isPrimary === false) return;
-
                 pointerX = event.clientX - windowHalfX;
-
+                // 只要移动一样的距离，targetRotation都是一样的
                 targetRotation = targetRotationOnPointerDown + (pointerX - pointerXOnPointerDown) * 0.02;
             }
 
             function onPointerUp() {
-                if (event.isPrimary === false) return;
-
                 document.removeEventListener("pointermove", onPointerMove);
                 document.removeEventListener("pointerup", onPointerUp);
             }
-
-            //
 
             function animate() {
                 requestAnimationFrame(animate);
@@ -381,6 +373,7 @@
             }
 
             function render() {
+                // TODO: 搞懂这里是为什么
                 group.rotation.y += (targetRotation - group.rotation.y) * 0.05;
 
                 camera.lookAt(cameraTarget);
