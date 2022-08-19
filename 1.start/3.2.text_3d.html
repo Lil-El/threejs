@@ -301,7 +301,7 @@
                     bevelSize: bevelSize,
                     bevelEnabled: bevelEnabled,
                 });
-
+                console.log(textGeo);
                 textGeo.computeBoundingBox();
 
                 const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
@@ -373,9 +373,16 @@
             }
 
             function render() {
-                // 下一次 = 当前 + (目标 - 当前) * 0.05；当前的值会不断变大，差值也会减小，下一次的值虽然变大了，但是每个值之间的差值会不断缩小
-                // 这样一来，模拟了惯性
-                group.rotation.y += (targetRotation - group.rotation.y) * 0.05;
+                /**
+                 * 下一次 = 当前 + (目标 - 当前) * 0.05；当前的值会不断变大，差值也会减小，下一次的值虽然变大了，但是每个值之间的差值会不断缩小
+                 * 这样一来，模拟了惯性
+                 */ 
+                if(targetRotation != group.rotation.y) {
+                    group.rotation.y += (targetRotation - group.rotation.y) * 0.05;
+                    if(Math.abs((targetRotation - group.rotation.y) * 0.05) < 0.000001) {
+                        group.rotation.y = targetRotation;
+                    }
+                }
 
                 camera.lookAt(cameraTarget);
 
