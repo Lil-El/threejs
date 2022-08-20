@@ -39,6 +39,8 @@
                 renderer = new THREE.WebGLRenderer();
                 renderer.setSize(window.innerWidth, window.innerHeight, false);
 
+                const orbitControl = new OrbitControls(camera, body);
+
                 body.appendChild(renderer.domElement);
 
                 cube = createCube();
