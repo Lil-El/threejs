@@ -18,6 +18,7 @@
         </script>
 
         <script type="module">
+            import * as Util from "/utils/index.js";
             import * as THREE from "three";
             import { OrbitControls } from "three/controls/OrbitControls.js";
 
@@ -39,7 +40,7 @@
                 renderer = new THREE.WebGLRenderer();
                 renderer.setSize(window.innerWidth, window.innerHeight, false);
 
-                const orbitControl = new OrbitControls(camera, body);
+                Util.orbitControl(camera, body);
 
                 body.appendChild(renderer.domElement);
 
@@ -69,19 +70,10 @@
                 renderer.render(scene, camera);
             }
 
-            function onSizeChange() {
-                window.addEventListener("resize", evt => {
-                    camera.aspect = window.innerWidth / window.innerHeight;
-                    camera.updateProjectionMatrix();
-
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }
-
             import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     init();
-                    onSizeChange();
+                    Util.onSizeChange(camera, renderer);
                     animate();
                 } else {
                     const warning = WebGL.getWebGLErrorMessage();
