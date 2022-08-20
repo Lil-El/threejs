@@ -8,8 +8,18 @@
         <link rel="stylesheet" href="../assets/style/common.css" />
     </head>
     <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
         <script type="module">
-            import * as THREE from "/node_modules/three/build/three.module.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
 
             const body = document.body;
             let camera, scene, renderer;
@@ -38,7 +48,7 @@
             function createCube(n = 100) {
                 const box = new THREE.BoxGeometry(n, n, n);
                 box.computeBoundingBox();
-                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff});
+                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff });
                 const cube = new THREE.Mesh(box, material1);
                 cube.rotation.y = 0.3;
                 scene.add(cube);
@@ -57,9 +67,19 @@
                 renderer.render(scene, camera);
             }
 
+            function onSizeChange() {
+                window.addEventListener("resize", evt => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
             import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     init();
+                    onSizeChange();
                     animate();
                 } else {
                     const warning = WebGL.getWebGLErrorMessage();
