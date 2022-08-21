@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="../assets/style/common.css" />
+    </head>
+    <body>
+        <span>OrbitControl, PlaneGeometry</span>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let ball, light, orbitControl;
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                scene.fog = new THREE.Fog(0xffffff, 100, 2000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 120, 300);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+                // 创建圆形
+                let ball = createCircle(100, 100, 0, Math.PI);
+                ball.position.x = -100;
+                // 创建五边形
+                let polygon = createCircle(100, 5, 0, 2 * Math.PI);
+                polygon.position.x = 100;
+                polygon.position.y = 80;
+                polygon.rotation.z = 0.3;
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(700, 700);
+                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                scene.add(plane);
+            }
+
+            function createCircle(radius, count, startDeg, thetaLength) {
+                // CircleGeometry：创建规则的多边形
+                // 半径、构成图形的三角形数量、起始角度、扇区中心角
+                const circle = new THREE.CircleGeometry(radius, count, startDeg, thetaLength);
+                circle.computeBoundingBox();
+                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
+                const obj = new THREE.Mesh(circle, material1);
+                scene.add(obj);
+                return obj;
+            }
+
+            function createLight() {
+                const pointLight = new THREE.PointLight(0xffffff, 1.4);
+                pointLight.position.set(300, 300, 300);
+                scene.add(pointLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+            }
+
+            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>
