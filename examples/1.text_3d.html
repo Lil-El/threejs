@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="../assets/style/common.css" />
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div id="control-container">
+                <h1>Controller</h1>
+                <hr />
+                <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="120" name="xAxis" /></div>
+                <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="30" name="yAxis" /></div>
+                <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="515" name="zAxis" /></div>
+            </div>
+            <div id="three-container"></div>
+        </div>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            import { FontLoader } from "/node_modules/three/examples/jsm/loaders/FontLoader.js";
+            import { TextGeometry } from "/node_modules/three/examples/jsm/geometries/TextGeometry.js";
+            import Stats from "/node_modules/three/examples/jsm/libs/stats.module.js";
+
+            THREE.Cache.enabled = true;
+
+            let container, stateContainer, stats, permalink, hex;
+
+            let camera, cameraTarget, scene, renderer;
+
+            let group, textMesh1, textMesh2, textGeo, materials;
+
+            let firstLetter = true;
+
+            let text = "three.js",
+                bevelEnabled = true,
+                font = undefined,
+                fontName = "optimer", // helvetiker, optimer, gentilis, droid sans, droid serif
+                fontWeight = "bold"; // normal bold
+
+            const height = 20,
+                size = 70,
+                hover = 30,
+                curveSegments = 4,
+                bevelThickness = 2,
+                bevelSize = 1.5;
+
+            const mirror = true;
+
+            const fontMap = {
+                helvetiker: 0,
+                optimer: 1,
+                gentilis: 2,
+                "droid/droid_sans": 3,
+                "droid/droid_serif": 4,
+            };
+
+            const weightMap = {
+                regular: 0,
+                bold: 1,
+            };
+
+            const reverseFontMap = [];
+            const reverseWeightMap = [];
+
+            for (const i in fontMap) reverseFontMap[fontMap[i]] = i;
+            for (const i in weightMap) reverseWeightMap[weightMap[i]] = i;
+
+            let targetRotation = 0;
+            let targetRotationOnPointerDown = 0;
+
+            let pointerX = 0;
+            let pointerXOnPointerDown = 0;
+
+            let windowHalfX = window.innerWidth / 2;
+
+            let fontIndex = 1;
+
+            init();
+            animate();
+
+            /* 将十进制转换为16进制 */
+            function decimalToHex(d) {
+                let hex = Number(d).toString(16);
+                hex = "000000".substring(0, 6 - hex.length) + hex;
+                return hex.toUpperCase();
+            }
+
+            function init() {
+                container = document.getElementById("three-container");
+                stateContainer = document.getElementById("control-container");
+                permalink = document.getElementById("permalink");
+
+                // CAMERA
+
+                camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1500);
+                camera.position.set(0, 400, 700);
+
+                cameraTarget = new THREE.Vector3(0, 120, 0);
+
+                // SCENE
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                scene.fog = new THREE.Fog(0x000000, 200, 1400);
+
+                // LIGHTS
+
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.125);
+                dirLight.position.set(0, 0, 1).normalize();
+                scene.add(dirLight);
+
+                const pointLight = new THREE.PointLight(0xffffff, 1.8);
+                pointLight.position.set(0, 100, 90);
+                scene.add(pointLight);
+
+                // Get text from hash
+
+                const hash = document.location.hash.slice(1);
+
+                if (hash.length !== 0) {
+                    const colorhash = hash.substring(0, 6);
+                    const fonthash = hash.substring(6, 7);
+                    const weighthash = hash.substring(7, 8);
+                    const bevelhash = hash.substring(8, 9);
+                    const texthash = hash.substring(10);
+
+                    hex = colorhash;
+                    pointLight.color.setHex(parseInt(colorhash, 16));
+
+                    fontName = reverseFontMap[parseInt(fonthash)];
+                    fontWeight = reverseWeightMap[parseInt(weighthash)];
+
+                    bevelEnabled = parseInt(bevelhash);
+
+                    text = decodeURI(texthash);
+
+                    updatePermalink();
+                } else {
+                    pointLight.color.setHSL(Math.random(), 1, 0.5);
+                    hex = decimalToHex(pointLight.color.getHex());
+                }
+
+                /* MeshPhongMaterial:一种用于具有镜面高光的光泽表面的材质 */
+                // 定义前面front和侧面side的材质
+                materials = [
+                    new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true, /* 高亮程度 */ shininess: 30, /* 高光颜色 */ specular: 0x0000ff /* 线框wireframe: true */ }), // front
+                    new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true }), // side
+                ];
+
+                /* Group属于“物体”，同Line、Bone等 */
+                group = new THREE.Group();
+                group.position.y = 100;
+
+                scene.add(group);
+
+                /* 加载font，渲染text和mirror text */
+                loadFont();
+
+                /* 创建 平面的几何体（即镜面） */
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.3, transparent: true }));
+                plane.position.y = 100;
+                plane.rotation.x = -Math.PI / 2;
+                scene.add(plane);
+
+                // RENDERER
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+
+                // STATS: 统计；创建统计面板
+                stats = new Stats();
+                stateContainer.appendChild(stats.dom);
+
+
+                // EVENTS
+                container.style.touchAction = "none";
+                container.addEventListener("pointerdown", onPointerDown);
+                document.addEventListener("keypress", onDocumentKeyPress);
+                document.addEventListener("keydown", onDocumentKeyDown);
+
+                document.getElementById("color")?.addEventListener("click", function () {
+                    pointLight.color.setHSL(Math.random(), 1, 0.5);
+                    hex = decimalToHex(pointLight.color.getHex());
+
+                    updatePermalink();
+                });
+
+                document.getElementById("font")?.addEventListener("click", function () {
+                    fontIndex++;
+
+                    fontName = reverseFontMap[fontIndex % reverseFontMap.length];
+
+                    loadFont();
+                });
+
+                document.getElementById("weight")?.addEventListener("click", function () {
+                    if (fontWeight === "bold") {
+                        fontWeight = "regular";
+                    } else {
+                        fontWeight = "bold";
+                    }
+
+                    loadFont();
+                });
+
+                document.getElementById("bevel")?.addEventListener("click", function () {
+                    bevelEnabled = !bevelEnabled;
+
+                    refreshText();
+                });
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function boolToNum(b) {
+                return b ? 1 : 0;
+            }
+
+            function updatePermalink() {
+                const link = hex + fontMap[fontName] + weightMap[fontWeight] + boolToNum(bevelEnabled) + "#" + encodeURI(text);
+
+                // permalink?.href = "#" + link;
+                window.location.hash = link;
+            }
+
+            function onDocumentKeyDown(event) {
+                if (firstLetter) {
+                    firstLetter = false;
+                    text = "";
+                }
+
+                const keyCode = event.keyCode;
+
+                // backspace
+
+                if (keyCode == 8) {
+                    event.preventDefault();
+
+                    text = text.substring(0, text.length - 1);
+                    refreshText();
+
+                    return false;
+                }
+            }
+
+            function onDocumentKeyPress(event) {
+                const keyCode = event.which;
+
+                // backspace
+
+                if (keyCode == 8) {
+                    event.preventDefault();
+                } else {
+                    const ch = String.fromCharCode(keyCode);
+                    text += ch;
+
+                    refreshText();
+                }
+            }
+
+            function loadFont() {
+                const loader = new FontLoader();
+                loader.load("/node_modules/three/examples/fonts/" + fontName + "_" + fontWeight + ".typeface.json", function (response) {
+                    font = response;
+
+                    refreshText();
+                });
+            }
+
+            function createText() {
+                textGeo = new TextGeometry(text, {
+                    font: font,
+
+                    size: size,
+                    height: height,
+                    curveSegments: curveSegments,
+
+                    bevelThickness: bevelThickness,
+                    bevelSize: bevelSize,
+                    bevelEnabled: bevelEnabled,
+                });
+                console.log(textGeo);
+                textGeo.computeBoundingBox();
+
+                const centerOffset = -0.5 * (textGeo.boundingBox.max.x - textGeo.boundingBox.min.x);
+
+                textMesh1 = new THREE.Mesh(textGeo, materials);
+
+                textMesh1.position.x = centerOffset;
+                textMesh1.position.y = hover;
+                textMesh1.position.z = 0;
+
+                textMesh1.rotation.x = 0;
+                textMesh1.rotation.y = Math.PI * 2;
+
+                group.add(textMesh1);
+
+                if (mirror) {
+                    textMesh2 = new THREE.Mesh(textGeo, materials);
+
+                    textMesh2.position.x = centerOffset;
+                    textMesh2.position.y = -hover;
+                    textMesh2.position.z = height;
+
+                    textMesh2.rotation.x = Math.PI;
+                    textMesh2.rotation.y = Math.PI * 2;
+
+                    group.add(textMesh2);
+                }
+            }
+
+            function refreshText() {
+                updatePermalink();
+
+                group.remove(textMesh1);
+                if (mirror) group.remove(textMesh2);
+
+                if (!text) return;
+
+                createText();
+            }
+
+            /* 
+                假设：屏幕中心点为0，左边是-500，右边是500
+             */
+            function onPointerDown(event) {
+                pointerXOnPointerDown = event.clientX - windowHalfX;
+                targetRotationOnPointerDown = targetRotation; // 将上次旋转的度数赋值，基于这个计算新的旋转角度
+
+                document.addEventListener("pointermove", onPointerMove);
+                document.addEventListener("pointerup", onPointerUp);
+            }
+
+            /* 移动1px 等于 旋转1度; 180px == PI; 3.1415926/180约等于0.0175 */
+            function onPointerMove(event) {
+                pointerX = event.clientX - windowHalfX;
+                // 只要移动一样的距离，targetRotation基本上都是一样的
+                targetRotation = targetRotationOnPointerDown + (pointerX - pointerXOnPointerDown) * 0.02;
+            }
+
+            function onPointerUp() {
+                document.removeEventListener("pointermove", onPointerMove);
+                document.removeEventListener("pointerup", onPointerUp);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                render();
+                stats.update();
+            }
+
+            function render() {
+                /**
+                 * 下一次 = 当前 + (目标 - 当前) * 0.05；当前的值会不断变大，差值也会减小，下一次的值虽然变大了，但是每个值之间的差值会不断缩小
+                 * 这样一来，模拟了惯性
+                 */ 
+                if(targetRotation != group.rotation.y) {
+                    group.rotation.y += (targetRotation - group.rotation.y) * 0.05;
+                    if(Math.abs((targetRotation - group.rotation.y) * 0.05) < 0.000001) {
+                        group.rotation.y = targetRotation;
+                    }
+                }
+
+                camera.lookAt(cameraTarget);
+
+                renderer.clear();
+                renderer.render(scene, camera);
+            }
+        </script>
+    </body>
+</html>
