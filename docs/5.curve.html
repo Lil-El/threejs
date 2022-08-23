@@ -48,9 +48,9 @@
 
                 createLight();
                 createPlane();
-                // 创建圆形
-                let cone = createCone();
-                cone.position.y = 200;
+
+                let obj = createThing();
+                obj.position.y = 200;
             }
 
             function createPlane() {
@@ -61,19 +61,28 @@
                 scene.add(plane);
             }
 
-            function createExtrude() {
-                // ConeGeometry：创建圆锥
-                // radius — 圆锥底部的半径，默认值为1。
-                // height — 圆锥的高度，默认值为1。
-                // radialSegments — 圆锥侧面周围的分段数，默认为8。
-                // heightSegments — 圆锥侧面沿着其高度的分段数，默认值为1。理解为表面的光滑度
-                // openEnded — 一个Boolean值，指明该圆锥的底面是开放的还是封顶的。默认值为false，即其底面默认是封顶的。
-                // thetaStart — 第一个分段的起始角度，默认为0。（three o'clock position）
-                // thetaLength — 圆锥底面圆扇区的中心角，通常被称为“θ”（西塔）。默认值是2*Pi，这使其成为一个完整的圆锥。
-                const cone = new THREE.ConeGeometry(100, 160, 8, 1, false, 0, Math.PI);
-                cone.computeBoundingBox();
-                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
-                const obj = new THREE.Mesh(cone, material1);
+            function createThing() {
+                // 继承关系：Curve -> CurvePath -> Path -> Shape
+                // Shape继承自THREE.Path类; THREE.Path类似于Fabric.Path，SVG的Path;
+                // 下个点绘制包含绝对位置 或 相对当前点位置
+                // 绘制椭圆、圆、贝塞尔曲线、二次曲线（包含椭圆、抛物线、双曲线）
+                const shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.lineTo(100, 0);
+                // shape.absarc(100, 25, 25, -0.5 * Math.PI, 0.5 * Math.PI, false) // 使用的绝对位置；同下
+                shape.arc(0, 25, 25, -0.5 * Math.PI, 0.5 * Math.PI, false); // 使用相对位置
+                shape.lineTo(0, 50);
+
+                // shape.closePath(new THREE.LineCurve([0, 50], [0, 0]));
+                shape.ellipse(0, -25, 100, 25, 0.5 * Math.PI, 1.5 * Math.PI, false, 0)
+
+                const points = shape.getPoints();
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                // const geometry = new THREE.ExtrudeGeometry(shapes);
+                geometry.computeBoundingBox();
+                const material1 = new THREE.LineBasicMaterial({ color: 0x0000ff });
+                const obj = new THREE.Line(geometry, material1);
                 scene.add(obj);
                 return obj;
             }
