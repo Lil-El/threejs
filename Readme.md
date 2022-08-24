@@ -140,7 +140,7 @@ Textures
 - √ [CylinderGeometry](/docs/4.edge.html): 圆柱缓冲几何体
 - √ DodecahedronGeometry: 十二面缓冲几何体
 - √ [EdgesGeometry](/docs/4.edge.html): 边缘几何体(用作辅助对象来查看其他geometry的边缘)
-- [ExtrudeGeometry](/docs/6.extrude.html): 挤压缓冲几何体(根据一个形状路径，生成一个几何体)
+- √ [ExtrudeGeometry](/docs/6.extrude.html): 挤压缓冲几何体(根据一个形状路径，生成一个几何体)
 - √ IcosahedronGeometry: 二十面缓冲几何体
 - LatheGeometry
 - √ OctahedronGeometry: 八面缓冲几何体

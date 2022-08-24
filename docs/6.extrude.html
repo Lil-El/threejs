@@ -27,7 +27,7 @@
             const body = document.body;
             let camera, scene, renderer;
 
-            let geometry, light, orbitControl;
+            let geometry, light, orbitControl, group;
 
             function init() {
                 /* 创建场景、相机、渲染器 */
@@ -51,7 +51,7 @@
 
                 let obj = createThing();
                 let wrap = createLineWrap();
-                let group = new THREE.Group();
+                group = new THREE.Group();
                 group.add(obj);
                 group.add(wrap);
                 scene.add(group);
@@ -72,13 +72,15 @@
                 shape.lineTo(100, 0);
                 shape.arc(0, 25, 25, -0.5 * Math.PI, 0.5 * Math.PI, false); // 使用相对位置
                 shape.lineTo(0, 50);
-                shape.ellipse(0, -25, 100, 25, 0.5 * Math.PI, 1.5 * Math.PI, false, 0);
+                shape.lineTo(0, 50);
+                // shape.ellipse(0, -25, 100, 25, 0.5 * Math.PI, 1.5 * Math.PI, false, 0);
+                shape.absellipse(0, 25, 25, 25.000001, 0.5 * Math.PI, 1.5 * Math.PI, false, 0);
 
                 geometry = new THREE.ExtrudeGeometry(shape, {
-                    curveSegments: 3,
-                    depth: 30,
+                    curveSegments: 10,
+                    depth: 10,
                     bevelThickness: 10,
-                    bevelSize: 8,
+                    bevelSize: 0,
                     steps: 10,
                     bevelOffset: 10,
                     bevelSegments: 4,
@@ -108,6 +110,8 @@
                 requestAnimationFrame(animate);
                 renderer.render(scene, camera);
                 orbitControl.update();
+                // group.rotation.x += 0.005;
+                // group.rotation.y += 0.005;
             }
 
             import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
