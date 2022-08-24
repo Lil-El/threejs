@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <link rel="stylesheet" href="../assets/style/common.css" />
+        <link rel="stylesheet" href="/assets/style/common.css" />
     </head>
     <body>
         <script type="module">
@@ -55,7 +55,7 @@
                 renderer.render(scene, camera);
             }
             /* WebGL兼容性检查: https://github.com/mrdoob/three.js/blob/master/examples/jsm/capabilities/WebGL.js */
-            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     animate();
                 } else {

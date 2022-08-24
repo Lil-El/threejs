@@ -1,13 +1,13 @@
 # Three.js
 
-- [three.js文档](https://threejs.org/docs/index.html)
+- [three.js文档](https://threejs.org/docs/geometry/index.html)
 - [three.js](https://threejs.org/)
 - [three.js](https://threejs.org/Three.js/)
 
 ## step
 
 1. start
-2. docs
+2. docs\
 3. examples
 
 ## /three/examples/jsm(js)
@@ -115,37 +115,37 @@ Textures
 - PMREMGenerator
 - ShapeUtils
 - 核心
-    - [Curve](/docs/5.curve.html): 众多曲线类的父类
-    - [CurvePath](/docs/5.curve.html)
+    - √ [Curve](/docs/geometry/5.curve.html): 众多曲线类的父类
+    - √ [CurvePath](/docs/geometry/5.curve.html)
     - Interpolations
-    - [Path](/docs/5.curve.html): Path
-    - [Shape](/docs/5.curve.html): Shape
+    - √ [Path](/docs/geometry/5.curve.html): Path
+    - √ [Shape](/docs/geometry/5.curve.html): Shape
     - ShapePath   
 - 曲线
-    - ArcCurve
+    - √ [ArcCurve](/docs/geometry/7.lathe.html): EllipseCurve的别名，相较于ellipse，arc的x和y的radius是一样的
     - CatmullRomCurve3
     - CubicBezierCurve
     - CubicBezierCurve3
-    - EllipseCurve
-    - LineCurve
-    - LineCurve3
+    - √ [EllipseCurve](/docs/geometry/7.lathe.html): 椭圆曲线
+    - √ [LineCurve](/docs/geometry/7.lathe.html): 二维线段
+    - √ [LineCurve3](/docs/geometry/7.lathe.html): 三维线段
     - QuadraticBezierCurve
     - QuadraticBezierCurve3
     - SplineCurve
 
 ### 几何体
-- √ [BoxGeometry](/docs/1.box.html): 立方缓冲几何体
-- √ [CircleGeometry](/docs/2.circle.html): 圆形缓冲几何体
-- √ [ConeGeometry](/docs/3.cone.html): 圆锥缓冲几何体
-- √ [CylinderGeometry](/docs/4.edge.html): 圆柱缓冲几何体
+- √ [BoxGeometry](/docs/geometry/1.box.html): 立方缓冲几何体
+- √ [CircleGeometry](/docs/geometry/2.circle.html): 圆形缓冲几何体
+- √ [ConeGeometry](/docs/geometry/3.cone.html): 圆锥缓冲几何体
+- √ [CylinderGeometry](/docs/geometry/4.edge.html): 圆柱缓冲几何体
 - √ DodecahedronGeometry: 十二面缓冲几何体
-- √ [EdgesGeometry](/docs/4.edge.html): 边缘几何体(用作辅助对象来查看其他geometry的边缘)
-- √ [ExtrudeGeometry](/docs/6.extrude.html): 挤压缓冲几何体(根据一个形状路径，生成一个几何体)
+- √ [EdgesGeometry](/docs/geometry/4.edge.html): 边缘几何体(用作辅助对象来查看其他geometry的边缘)
+- √ [ExtrudeGeometry](/docs/geometry/6.extrude.html): 挤压缓冲几何体(根据一个形状路径，生成一个几何体)
 - √ IcosahedronGeometry: 二十面缓冲几何体
-- LatheGeometry
+- √ [LatheGeometry](/docs/geometry/7.lathe.html): 车削缓冲几何体
 - √ OctahedronGeometry: 八面缓冲几何体
-- √ [PlaneGeometry](/docs/1.box.html): 平面缓冲几何体
-- PolyhedronGeometry
+- √ [PlaneGeometry](/docs/geometry/1.box.html): 平面缓冲几何体
+- √ [PolyhedronGeometry](/docs/geometry/8.polyhedron.html): 缓冲几何体(是DodecahedronGeometry、IcosahedronGeometry、OctahedronGeometry和TetrahedronGeometry的父类)
 - RingGeometry
 - ShapeGeometry
 - SphereGeometry

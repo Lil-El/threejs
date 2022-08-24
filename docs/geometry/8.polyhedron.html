@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <link rel="stylesheet" href="../assets/style/common.css" />
+        <link rel="stylesheet" href="/assets/style/common.css" />
     </head>
     <body>
         <span>OrbitControl, PlaneGeometry</span>
@@ -27,7 +27,7 @@
             const body = document.body;
             let camera, scene, renderer;
 
-            let ball, light, orbitControl;
+            let geometry, light, orbitControl, group;
 
             function init() {
                 /* 创建场景、相机、渲染器 */
@@ -36,7 +36,7 @@
                 scene.fog = new THREE.Fog(0xffffff, 100, 2000);
 
                 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
-                camera.position.set(0, 120, 300);
+                camera.position.set(0, 420, 500);
                 camera.lookAt(0, 0, 0);
 
                 renderer = new THREE.WebGLRenderer();
@@ -48,14 +48,14 @@
 
                 createLight();
                 createPlane();
-                // 创建圆形
-                let ball = createCircle(100, 100, 0, Math.PI);
-                ball.position.x = -100;
-                // 创建五边形
-                let polygon = createCircle(100, 5, 0, 2 * Math.PI);
-                polygon.position.x = 100;
-                polygon.position.y = 80;
-                polygon.rotation.z = 0.3;
+
+                let obj = createThing();
+                let wrap = createLineWrap();
+                group = new THREE.Group();
+                group.add(obj);
+                group.add(wrap);
+                scene.add(group);
+                group.position.y = 200;
             }
 
             function createPlane() {
@@ -66,14 +66,35 @@
                 scene.add(plane);
             }
 
-            function createCircle(radius, count, startDeg, thetaLength) {
-                // CircleGeometry：创建规则的多边形
-                // 半径、构成图形的三角形数量、起始角度、扇区中心角
-                const circle = new THREE.CircleGeometry(radius, count, startDeg, thetaLength);
-                circle.computeBoundingBox();
-                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
-                const obj = new THREE.Mesh(circle, material1);
-                scene.add(obj);
+            function createThing() {
+                // 
+                // vector3坐标；共7个点
+                const verticesOfCube = [
+                    -1,-1,-1,    1,-1,-1,    1, 1,-1,    -1, 1,-1,
+                    -1,-1, 1,    1,-1, 1,    1, 1, 1,    -1, 1, 1,
+                ];
+                // 三个点构成一个面，点的下标
+                const indicesOfFaces = [
+                    2,1,0,    0,3,2,
+                    0,4,7,    7,3,0,
+                    0,1,5,    5,4,0,
+                    1,2,6,    6,5,1,
+                    2,3,7,    7,6,2,
+                    4,5,6,    6,7,4
+                ];
+                geometry = new THREE.PolyhedronGeometry( verticesOfCube, indicesOfFaces, 100, 0 );
+                
+                geometry.computeBoundingBox();
+                const material1 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+                const obj = new THREE.Mesh(geometry, material1);
+
+                return obj;
+            }
+
+            function createLineWrap() {
+                let edgeGeo = new THREE.EdgesGeometry(geometry);
+                let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+                let obj = new THREE.LineSegments(edgeGeo, material);
                 return obj;
             }
 
@@ -87,9 +108,11 @@
                 requestAnimationFrame(animate);
                 renderer.render(scene, camera);
                 orbitControl.update();
+                // group.rotation.x += 0.005;
+                // group.rotation.y += 0.005;
             }
 
-            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     init();
                     Util.onSizeChange(camera, renderer);

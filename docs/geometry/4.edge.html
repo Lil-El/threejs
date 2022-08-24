@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <span>线框辅助</span>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let cylinder, light, orbitControl;
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                scene.fog = new THREE.Fog(0xffffff, 100, 2000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 420, 500);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+
+                // 圆柱cylinder和辅助线框line是一起的，封装在一个group中去设置相关位置等属性
+                let obj = createCylinder();
+                let line = createEdges(cylinder);
+                const group = new THREE.Group();
+                group.add(obj);
+                group.add(line);
+                scene.add(group);
+                group.position.y = 200;
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(700, 700);
+                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                scene.add(plane);
+            }
+
+            function createCylinder() {
+                // CylinderGeometry：创建圆柱
+                // radiusTop — 圆柱的顶部半径，默认值是1。
+                // radiusBottom — 圆柱的底部半径，默认值是1。
+                // height — 圆柱的高度，默认值是1。
+                // radialSegments — 圆柱侧面周围的分段数，默认为8。
+                // heightSegments — 圆柱侧面沿着其高度的分段数，默认值为1。
+                // openEnded — 一个Boolean值，指明该圆锥的底面是开放的还是封顶的。默认值为false，即其底面默认是封顶的。
+                // thetaStart — 第一个分段的起始角度，默认为0。（three o'clock position）
+                // thetaLength - 扇区的中心角
+                cylinder = new THREE.CylinderGeometry(80, 80, 120, 8, 1, false, 0, 2 * Math.PI);
+                cylinder.computeBoundingBox();
+                const material1 = new THREE.MeshPhongMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
+                const obj = new THREE.Mesh(cylinder, material1);
+                return obj;
+            }
+
+            function createEdges(geometry) {
+                const edges = new THREE.EdgesGeometry(geometry);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+                return line;
+            }
+
+            function createLight() {
+                const pointLight = new THREE.PointLight(0xffffff, 1.4);
+                pointLight.position.set(300, 300, 300);
+                scene.add(pointLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

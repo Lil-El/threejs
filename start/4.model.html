@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <link rel="stylesheet" href="../assets/style/common.css" />
+        <link rel="stylesheet" href="/assets/style/common.css" />
         <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
     </head>
     <body>
@@ -140,7 +140,7 @@
                 // camera.lookAt(scene.position);
                 renderer.render(scene, camera);
             }
-            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     setCameraPosition();
                     onChange();

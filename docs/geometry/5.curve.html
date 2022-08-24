@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <link rel="stylesheet" href="../assets/style/common.css" />
+        <link rel="stylesheet" href="/assets/style/common.css" />
     </head>
     <body>
         <span>OrbitControl, PlaneGeometry</span>
@@ -27,7 +27,7 @@
             const body = document.body;
             let camera, scene, renderer;
 
-            let geometry, light, orbitControl, group;
+            let light, orbitControl;
 
             function init() {
                 /* 创建场景、相机、渲染器 */
@@ -50,12 +50,7 @@
                 createPlane();
 
                 let obj = createThing();
-                let wrap = createLineWrap();
-                group = new THREE.Group();
-                group.add(obj);
-                group.add(wrap);
-                scene.add(group);
-                group.position.y = 200;
+                obj.position.y = 200;
             }
 
             function createPlane() {
@@ -67,36 +62,28 @@
             }
 
             function createThing() {
+                // 继承关系：Curve -> CurvePath -> Path -> Shape
+                // Shape继承自THREE.Path类; THREE.Path类似于Fabric.Path，SVG的Path;
+                // 下个点绘制包含绝对位置 或 相对当前点位置
+                // 绘制椭圆、圆、贝塞尔曲线、二次曲线（包含椭圆、抛物线、双曲线）
                 const shape = new THREE.Shape();
                 shape.moveTo(0, 0);
                 shape.lineTo(100, 0);
+                // shape.absarc(100, 25, 25, -0.5 * Math.PI, 0.5 * Math.PI, false) // 使用的绝对位置；同下
                 shape.arc(0, 25, 25, -0.5 * Math.PI, 0.5 * Math.PI, false); // 使用相对位置
                 shape.lineTo(0, 50);
-                shape.lineTo(0, 50);
-                // shape.ellipse(0, -25, 100, 25, 0.5 * Math.PI, 1.5 * Math.PI, false, 0);
-                shape.absellipse(0, 25, 25, 25.000001, 0.5 * Math.PI, 1.5 * Math.PI, false, 0);
 
-                geometry = new THREE.ExtrudeGeometry(shape, {
-                    curveSegments: 10,
-                    depth: 10,
-                    bevelThickness: 10,
-                    bevelSize: 0,
-                    steps: 10,
-                    bevelOffset: 10,
-                    bevelSegments: 4,
-                });
+                // shape.closePath(new THREE.LineCurve([0, 50], [0, 0]));
+                shape.ellipse(0, -25, 100, 25, 0.5 * Math.PI, 1.5 * Math.PI, false, 0)
+
+                const points = shape.getPoints();
+
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                // const geometry = new THREE.ExtrudeGeometry(shapes);
                 geometry.computeBoundingBox();
-                const material1 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-                const material2 = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-                const obj = new THREE.Mesh(geometry, [material1, material2]);
-
-                return obj;
-            }
-
-            function createLineWrap() {
-                let edgeGeo = new THREE.EdgesGeometry(geometry);
-                let material = new THREE.LineBasicMaterial({ color: 0xffffff });
-                let obj = new THREE.LineSegments(edgeGeo, material);
+                const material1 = new THREE.LineBasicMaterial({ color: 0x0000ff });
+                const obj = new THREE.Line(geometry, material1);
+                scene.add(obj);
                 return obj;
             }
 
@@ -110,11 +97,9 @@
                 requestAnimationFrame(animate);
                 renderer.render(scene, camera);
                 orbitControl.update();
-                // group.rotation.x += 0.005;
-                // group.rotation.y += 0.005;
             }
 
-            import("../assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
                 if (WebGL.isWebGLAvailable()) {
                     init();
                     Util.onSizeChange(camera, renderer);
