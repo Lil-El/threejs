@@ -146,12 +146,12 @@ Textures
 - √ OctahedronGeometry: 八面缓冲几何体
 - √ [PlaneGeometry](/docs/geometry/1.box.html): 平面缓冲几何体
 - √ [PolyhedronGeometry](/docs/geometry/8.polyhedron.html): 缓冲几何体(是DodecahedronGeometry、IcosahedronGeometry、OctahedronGeometry和TetrahedronGeometry的父类)
-- RingGeometry
-- ShapeGeometry
-- SphereGeometry
+- √ [RingGeometry](/docs/geometry/9.ring.html): 圆环缓冲几何体
+- √ [ShapeGeometry](/docs/geometry/10.shape.html): 形状缓冲几何体
+- √ [SphereGeometry](/docs/geometry/11.sphere.html): 球缓冲几何体
 - √ TetrahedronGeometry: 四面缓冲几何体
-- TorusGeometry
-- TorusKnotGeometry
+- √ [TorusGeometry](/docs/geometry/12.torus.html): 圆环缓冲几何体
+- √ TorusKnotGeometry: 圆环缓冲扭结几何体
 - TubeGeometry
 - WireframeGeometry
 

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <span>OrbitControl, PlaneGeometry</span>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, light, orbitControl, group;
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                scene.fog = new THREE.Fog(0xffffff, 100, 2000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 420, 500);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+
+                let obj = createThing();
+                let wrap = createLineWrap();
+                group = new THREE.Group();
+                group.add(obj);
+                group.add(wrap);
+                scene.add(group);
+                group.position.y = 200;
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(700, 700);
+                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                scene.add(plane);
+            }
+
+            function createThing() {
+                const x = 0, y = 0;
+
+                // 贝塞尔曲线：从currentPoint到第三个点做一条直线；第一、二参数做控制点
+
+                const heartShape = new THREE.Shape();
+
+                heartShape.moveTo(x + 5, y + 5);
+                heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
+                heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
+                heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19);
+                // heartShape.bezierCurveTo(x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7);
+                // heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
+                // heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
+
+                const geometry = new THREE.ShapeGeometry(heartShape);
+
+                geometry.computeBoundingBox();
+                const material1 = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+                const obj = new THREE.Mesh(geometry, material1);
+
+                return obj;
+            }
+
+            function createLineWrap() {
+                let edgeGeo = new THREE.EdgesGeometry(geometry);
+                let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+                let obj = new THREE.LineSegments(edgeGeo, material);
+                return obj;
+            }
+
+            function createLight() {
+                const pointLight = new THREE.PointLight(0xffffff, 1.4);
+                pointLight.position.set(300, 300, 300);
+                scene.add(pointLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+                // group.rotation.x += 0.005;
+                // group.rotation.y += 0.005;
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>
