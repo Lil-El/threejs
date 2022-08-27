@@ -116,7 +116,7 @@ Textures
 - ShapeUtils
 - 核心
     - √ [Curve](/docs/geometry/5.curve.html): 众多曲线类的父类
-    - √ [CurvePath](/docs/geometry/5.curve.html)
+    - √ [CurvePath](/docs/geometry/13.Tube.html)
     - Interpolations
     - √ [Path](/docs/geometry/5.curve.html): Path
     - √ [Shape](/docs/geometry/5.curve.html): Shape
@@ -152,8 +152,8 @@ Textures
 - √ TetrahedronGeometry: 四面缓冲几何体
 - √ [TorusGeometry](/docs/geometry/12.torus.html): 圆环缓冲几何体
 - √ TorusKnotGeometry: 圆环缓冲扭结几何体
-- TubeGeometry
-- WireframeGeometry
+- √ [TubeGeometry](/docs/geometry/13.Tube.html): 管道缓冲几何体
+- √ [WireframeGeometry](/docs/geometry/13.Wireframe.html): 网格几何体: 辅助物体, 对一个geometry以线框的形式进行查看
 
 ### 辅助对象
 
@@ -235,7 +235,7 @@ Textures
 
 - Box2
 - Box3
-- Color
+- √ Color
 - Cylindrical
 - Euler
 - Frustum
@@ -251,8 +251,8 @@ Textures
 - Spherical
 - SphericalHarmonics3
 - Triangle
-- Vector2
-- Vector3
+- √ Vector2
+- √ [Vector3](/docs/geometry/13.Tube.html)
 - Vector4
 - 插值
     - CubicInterpolant
@@ -263,13 +263,13 @@ Textures
 ### 物体
 
 - Bone
-- Group
+- √ Group
 - InstancedMesh
-- Line
+- √ Line
 - LineLoop
-- LineSegments
+- √ [LineSegments](/docs/geometry/13.Tube.html): 线段; 在若干对的顶点之间绘制的一系列的线。(也可是辅助查看物体的顶点)
 - LOD
-- Mesh
+- √ Mesh
 - Points
 - Skeleton
 - SkinnedMesh
