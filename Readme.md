@@ -264,12 +264,12 @@ Textures
 
 - √ [Bone](/docs/thing/1.bone.html): 骨骼: 几乎和空白的Object3D相同。是skeleton的一部分，由SkinnedMesh依次使用；
 - √ Group
-- InstancedMesh: 实例化网格；用来渲染大量具有相同geometry和material的物体，提升性能
-- √ Line
-- LineLoop
+- √ [InstancedMesh](/docs/thing/2.InstancedMesh.html): 实例化网格；用来渲染大量具有相同geometry和material的物体，提升性能
+- √ [Line](/start/2.line.html)
+- √ LineLoop: 将第一个、最后一个点连接起来
 - √ [LineSegments](/docs/geometry/13.Tube.html): 线段; 在若干对的顶点之间绘制的一系列的线。(也可是辅助查看物体的顶点)
-- LOD
 - √ Mesh
+- LOD: 多细节层次（LOD，Levels of Detail）
 - Points
 - Skeleton
 - SkinnedMesh
