@@ -91,7 +91,7 @@ Textures
 
 ### 核心
 
-- BufferAttribute
+- √ [BufferAttribute](/docs/thing/3.points.html): Float32BufferAttribute, Int32BufferAttribute, Uint8BufferAttribute等许多都继承自BufferAttribute；会将array转换为对应的Type Array; 用于BufferGeometry设置属性值（顶点、颜色等）
 - BufferGeometry
 - Clock
 - EventDispatcher
@@ -241,8 +241,8 @@ Textures
 - Frustum
 - Interpolant
 - Line3
-- MathUtils
-- Matrix3
+- √ [MathUtils](/docs/thing/3.points.html): 不需要new。可以生成随机数、度数与弧度转换、生成UUID、线性差值等
+- √ [Matrix3](/docs/thing/2.InstancedMesh.html): 矩阵。坐标的平移、转换、旋转。
 - Matrix4
 - Plane
 - Quaternion
@@ -269,8 +269,8 @@ Textures
 - √ LineLoop: 将第一个、最后一个点连接起来
 - √ [LineSegments](/docs/geometry/13.Tube.html): 线段; 在若干对的顶点之间绘制的一系列的线。(也可是辅助查看物体的顶点)
 - √ Mesh
+- √ [Points](/docs/thing/3.points.html): 点; 绘制BoxGeometry时，THREE.Points会渲染box的8个点；传入THREE.BufferGeometry可以传入任何点
 - LOD: 多细节层次（LOD，Levels of Detail）
-- Points
 - Skeleton
 - SkinnedMesh
 - Sprite
