@@ -91,8 +91,8 @@ Textures
 
 ### 核心
 
-- √ [BufferAttribute](/docs/thing/3.points.html): Float32BufferAttribute, Int32BufferAttribute, Uint8BufferAttribute等许多都继承自BufferAttribute；会将array转换为对应的Type Array; 用于BufferGeometry设置属性值（顶点、颜色等）
-- BufferGeometry
+- √ [BufferAttribute](/docs/thing/3.points.html): 用于BufferGeometry设置属性值（顶点、颜色等）
+- √ [BufferGeometry](/start/5.bufferGeometry.html): geometry的父类
 - Clock
 - EventDispatcher
 - GLBufferAttribute
@@ -105,8 +105,8 @@ Textures
 - Object3D
 - Raycaster
 - Uniform
-- BufferAttributes
-    - BufferAttribute Types
+- √ BufferAttributes
+    - √ [BufferAttribute Types](/docs/thing/3.points.html): Float32BufferAttribute, Int32BufferAttribute, Uint8BufferAttribute等许多都继承自BufferAttribute；会将array转换为对应的Type Array
 
 ### 附件
 
