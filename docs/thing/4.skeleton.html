@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <span>https://threejs.org/examples/#webgl_instancing_dynamic</span>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, mesh, obj, light, orbitControl, group, bones;
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                scene.fog = new THREE.Fog(0xffffff, 100, 2000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 420, 500);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+
+                let obj = createThing();
+                group = new THREE.Group();
+                group.add(obj);
+                scene.add(group);
+                group.position.y = 200;
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(700, 700);
+                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                scene.add(plane);
+            }
+
+            function createThing() {
+                const segmentHeight = 8;
+                const segmentCount = 4;
+                const height = segmentHeight * segmentCount;
+                const halfHeight = height * 0.5;
+
+                const sizing = {
+                    segmentHeight: segmentHeight,
+                    segmentCount: segmentCount,
+                    height: height,
+                    halfHeight: halfHeight,
+                };
+                geometry = createGeometry(sizing);
+                const bones = createBones(sizing);
+                mesh = createMesh(geometry, bones);
+
+                mesh.scale.multiplyScalar(1);
+                return mesh;
+            }
+
+            function createGeometry(sizing) {
+                const geometry = new THREE.CylinderGeometry(
+                    5, // radiusTop
+                    5, // radiusBottom
+                    sizing.height, // height
+                    8, // radiusSegments
+                    sizing.segmentCount * 3, // heightSegments
+                    true // openEnded
+                );
+
+                // position的count表示一个geometry的顶点数量。一个Box的有6面4点，所以一共是有24个顶点；array长度是24 * 3(x, y, z) = 72的长度
+                const position = geometry.attributes.position;
+
+                const vertex = new THREE.Vector3();
+
+                const skinIndices = [];
+                const skinWeights = [];
+
+                for (let i = 0; i < position.count; i++) {
+                    // fromBufferAttribute，从顶点数组中读取下标为i的点，存到vector3的向量中
+                    // position Float32Array
+                    vertex.fromBufferAttribute(position, i);
+
+                    const y = vertex.y + sizing.halfHeight;
+
+                    const skinIndex = Math.floor(y / sizing.segmentHeight);
+                    const skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
+
+                    skinIndices.push(skinIndex, skinIndex + 1, 0, 0);
+                    skinWeights.push(1 - skinWeight, skinWeight, 0, 0);
+                }
+
+                geometry.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndices, 4));
+                geometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeights, 4));
+
+                return geometry;
+            }
+
+            function createBones(sizing) {
+                bones = [];
+                let prevBone = new THREE.Bone();
+                bones.push(prevBone);
+                prevBone.position.y = -sizing.halfHeight;
+                for (let i = 0; i < sizing.segmentCount; i++) {
+                    const bone = new THREE.Bone();
+                    bone.position.y = sizing.segmentHeight;
+                    bones.push(bone);
+                    prevBone.add(bone);
+                    prevBone = bone;
+                }
+                return bones;
+            }
+            function createMesh(geometry, bones) {
+                const material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true });
+                const mesh = new THREE.SkinnedMesh(geometry, material);
+                const skeleton = new THREE.Skeleton(bones);
+                mesh.add(bones[0]);
+                mesh.bind(skeleton);
+                const skeletonHelper = new THREE.SkeletonHelper(mesh);
+                skeletonHelper.material.linewidth = 2;
+                scene.add(skeletonHelper);
+                return mesh;
+            }
+
+            function createWireframe(geo) {
+                const wireframe = new THREE.WireframeGeometry(geo);
+                const material = new THREE.LineBasicMaterial({ color: 0x000000, linecap: "round", linejoin: "round" });
+                const line = new THREE.LineSegments(wireframe, material);
+                return line;
+            }
+
+            function createLineWrap() {
+                let edgeGeo = new THREE.EdgesGeometry(geometry);
+                let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+                let obj = new THREE.LineSegments(edgeGeo, material);
+                return obj;
+            }
+
+            function createLight() {
+                const pointLight = new THREE.PointLight(0xffffff, 1.4);
+                pointLight.position.set(300, 300, 300);
+                scene.add(pointLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // const time = Date.now() * 0.001;
+                // if (state.animateBones) {
+                //     for (let i = 0; i < mesh.skeleton.bones.length; i++) {
+                //         mesh.skeleton.bones[i].rotation.z = (Math.sin(time) * 2) / mesh.skeleton.bones.length;
+                //     }
+                // }
+
+                renderer.render(scene, camera);
+                orbitControl.update();
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

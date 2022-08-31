@@ -262,7 +262,6 @@ Textures
 
 ### 物体
 
-- √ [Bone](/docs/thing/1.bone.html): 骨骼: 几乎和空白的Object3D相同。是skeleton的一部分，由SkinnedMesh依次使用；
 - √ Group
 - √ [InstancedMesh](/docs/thing/2.InstancedMesh.html): 实例化网格；用来渲染大量具有相同geometry和material的物体，提升性能
 - √ [Line](/start/2.line.html)
@@ -270,9 +269,10 @@ Textures
 - √ [LineSegments](/docs/geometry/13.Tube.html): 线段; 在若干对的顶点之间绘制的一系列的线。(也可是辅助查看物体的顶点)
 - √ Mesh
 - √ [Points](/docs/thing/3.points.html): 点; 绘制BoxGeometry时，THREE.Points会渲染box的8个点；传入THREE.BufferGeometry可以传入任何点
-- LOD: 多细节层次（LOD，Levels of Detail）
-- Skeleton
-- SkinnedMesh
+- LOD: 多细节层次（LOD，Levels of Detail） TODO:
+- √ [Bone](/docs/thing/1.bone.html): 骨骼: 几乎和空白的Object3D相同。是skeleton的一部分，由SkinnedMesh依次使用；
+- √ [Skeleton](/docs/thing/4.skeleton.html): 骨架（包含了Bone）
+- √ [SkinnedMesh](/docs/thing/4.skeleton.html): 
 - Sprite
 
 ### 渲染器
