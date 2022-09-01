@@ -8,7 +8,11 @@
         <link rel="stylesheet" href="/assets/style/common.css" />
     </head>
     <body>
-        <span>https://threejs.org/examples/#webgl_instancing_dynamic</span>
+        <ul>
+            <li>讲解：https://blog.csdn.net/u014291990/article/details/102996971/</li>
+            <li>例子：https://threejs.org/examples/#webgl_instancing_dynamic</li>
+            <li>例子：https://www.cnblogs.com/vadim-web/p/13407986.html</li>
+        </ul>
 
         <script type="importmap">
             {
@@ -51,7 +55,11 @@
 
                 let obj = createThing();
                 group = new THREE.Group();
+                let wire = createWireframe(geometry)
+                let line = createLineWrap()
                 group.add(obj);
+                group.add(wire);
+                group.add(line);
                 scene.add(group);
                 group.position.y = 200;
             }
@@ -65,6 +73,7 @@
             }
 
             function createThing() {
+                // 高：分为4部分，每部分高度为8，一共4个部分；所以height = 8 * 4；
                 const segmentHeight = 8;
                 const segmentCount = 4;
                 const height = segmentHeight * segmentCount;
@@ -88,12 +97,11 @@
                 const geometry = new THREE.CylinderGeometry(
                     5, // radiusTop
                     5, // radiusBottom
-                    sizing.height, // height
+                    sizing.height, // height = 8 * 4
                     8, // radiusSegments
-                    sizing.segmentCount * 3, // heightSegments
+                    sizing.segmentCount * 3, // heightSegments = 4 * 3；4个部分，每个部分是3个分段；一共12个分段
                     true // openEnded
                 );
-
                 // position的count表示一个geometry的顶点数量。一个Box的有6面4点，所以一共是有24个顶点；array长度是24 * 3(x, y, z) = 72的长度
                 const position = geometry.attributes.position;
 
@@ -104,18 +112,41 @@
 
                 for (let i = 0; i < position.count; i++) {
                     // fromBufferAttribute，从顶点数组中读取下标为i的点，存到vector3的向量中
-                    // position Float32Array
+                    // position 的类型是 Float32Array
                     vertex.fromBufferAttribute(position, i);
 
-                    const y = vertex.y + sizing.halfHeight;
+                    // 网上例子是在上面translateY geometry; 但是translate之后position的坐标仍然没有改变，还有负值，所以采用 + halfHeight的方式
+                    // 在初始时有一半高度下0轴之下，所以y+halfHeight；所以的y都是大于0的；计算的index也是>=0
+                    const y = vertex.y + sizing.halfHeight; 
 
-                    const skinIndex = Math.floor(y / sizing.segmentHeight);
-                    const skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
+                    // y区间: 0 - 32; bone0: 0 - 8; bone1: 8 - 16; bone2: 16 - 24; bone3: 24 - 32
+                    // 4个部分即有4个bone骨骼，也就是5个index点，index区间为[0, 4]
+                    // segmentHeight: 8; 每一段的高度为8
+                    // 一个点所受的影响：一个点位于bone(大腿)中间，那么点受这个bone(大腿)左右点的index(两个index即：大小腿关节、大腿胯关节)影响，而不是bone前后的boneIndex的影响(不是受小腿和胯的影响)；
+                    const skinIndex = Math.floor(y / sizing.segmentHeight); // y==32; index = 4;
+                    // %计算的是y所在的一段内相对的位置; / 计算的是一段内的相对位置/一段的高度，从而计算出权重来
+                    const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight; 
+                    /* 举例1： */
+                    // 设此时点是最高点：y = 32；
+                    // 那么影响这个点的index的下标为 (32/8=4) 4和5；
+                    // 这个点受4,5index的权重分别为 (((32 % 8) / 8) == 0) 1和0；(index4是端点为1，index5不存在即0)
+                    /* 举例2： */
+                    // 设此时点是中间偏上的那个部分的点：y = 20；
+                    // 影响此点的下标为(20/8=2)2,3；
+                    // 这个点受2,3的权重分别就是(((20%8) / 8) == 0.5) 0.5和0.5；（index2高度是16，index3高度是24，高度20刚好位于16-20中间，所以各受权重为0.5）
 
+                    /* 每个顶点可以受四个骨骼的影响； */
+                    // 受下标为skinIndex和skinIndex+1的骨骼的影响，另外两没有
                     skinIndices.push(skinIndex, skinIndex + 1, 0, 0);
+                    // 对应的两个受骨骼影响的权重
                     skinWeights.push(1 - skinWeight, skinWeight, 0, 0);
                 }
-
+                
+                // TypeArray比Array性能更好，TypeArray内存是连续的，创建、读写更快
+                // TypeArray: 类数组，无符号整型不代表只能存1,2,3...；只要二进制没有超过其字节数就可以
+                // Unit8: 无符号整型8个比特位，即1个字节；范围 [0, 2^8) [0 - 255]
+                // Unit16: 无符号整型16个比特位，即2个字节；范围 [0, 2^32) [0 - 65535]
+                // Float32: 浮点数32位，4字节，范围不确定；若小数点后面位数过多会超出范围
                 geometry.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndices, 4));
                 geometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeights, 4));
 
@@ -171,12 +202,10 @@
             function animate() {
                 requestAnimationFrame(animate);
 
-                // const time = Date.now() * 0.001;
-                // if (state.animateBones) {
-                //     for (let i = 0; i < mesh.skeleton.bones.length; i++) {
-                //         mesh.skeleton.bones[i].rotation.z = (Math.sin(time) * 2) / mesh.skeleton.bones.length;
-                //     }
-                // }
+                const time = Date.now() * 0.001;
+                for (let i = 0; i < mesh.skeleton.bones.length; i++) {
+                    mesh.skeleton.bones[i].rotation.z = (Math.sin(time) * 2) / mesh.skeleton.bones.length;
+                }
 
                 renderer.render(scene, camera);
                 orbitControl.update();
