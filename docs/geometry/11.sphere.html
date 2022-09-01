@@ -38,6 +38,9 @@
                 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
                 camera.position.set(0, 420, 500);
                 camera.lookAt(0, 0, 0);
+                let helper = new THREE.CameraHelper(camera);
+                helper.setColors(new THREE.Color(0xff0000), new THREE.Color(0xff00ff), new THREE.Color(0x00ff00), new THREE.Color(0xffff00), new THREE.Color(0x00fff0))
+                scene.add(helper)
 
                 renderer = new THREE.WebGLRenderer();
                 renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -51,9 +54,11 @@
 
                 let obj = createThing();
                 let wrap = createLineWrap();
+                let hp = createBoxHelper(obj);
                 group = new THREE.Group();
                 group.add(obj);
                 group.add(wrap);
+                group.add(hp);
                 scene.add(group);
                 group.position.y = 200;
             }
@@ -75,6 +80,11 @@
                 const obj = new THREE.Mesh(geometry, material1);
 
                 return obj;
+            }
+
+            function createBoxHelper(obj) {
+                const helper = new THREE.BoxHelper(obj, 0x00ff00);
+                return helper;
             }
 
             function createLineWrap() {

@@ -55,8 +55,8 @@
 
                 let obj = createThing();
                 group = new THREE.Group();
-                let wire = createWireframe(geometry)
-                let line = createLineWrap()
+                let wire = createWireframe(geometry);
+                let line = createLineWrap();
                 group.add(obj);
                 group.add(wire);
                 group.add(line);
@@ -65,11 +65,17 @@
             }
 
             function createPlane() {
-                const geometry = new THREE.PlaneGeometry(700, 700);
-                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
-                const plane = new THREE.Mesh(geometry, material);
-                plane.rotation.x = Math.PI / 2;
-                scene.add(plane);
+                // const geometry = new THREE.PlaneGeometry(700, 700);
+                // const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                // const plane = new THREE.Mesh(geometry, material);
+                // plane.rotation.x = Math.PI / 2;
+                // scene.add(plane);
+
+                // 参数1：法向量-0到点的线段垂直于平面
+                // 参数2：原点到平面的距离
+                const Plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -50);
+                const helper = new THREE.PlaneHelper(Plane, 1000, 0xffff00);
+                scene.add(helper);
             }
 
             function createThing() {
@@ -117,7 +123,7 @@
 
                     // 网上例子是在上面translateY geometry; 但是translate之后position的坐标仍然没有改变，还有负值，所以采用 + halfHeight的方式
                     // 在初始时有一半高度下0轴之下，所以y+halfHeight；所以的y都是大于0的；计算的index也是>=0
-                    const y = vertex.y + sizing.halfHeight; 
+                    const y = vertex.y + sizing.halfHeight;
 
                     // y区间: 0 - 32; bone0: 0 - 8; bone1: 8 - 16; bone2: 16 - 24; bone3: 24 - 32
                     // 4个部分即有4个bone骨骼，也就是5个index点，index区间为[0, 4]
@@ -125,7 +131,7 @@
                     // 一个点所受的影响：一个点位于bone(大腿)中间，那么点受这个bone(大腿)左右点的index(两个index即：大小腿关节、大腿胯关节)影响，而不是bone前后的boneIndex的影响(不是受小腿和胯的影响)；
                     const skinIndex = Math.floor(y / sizing.segmentHeight); // y==32; index = 4;
                     // %计算的是y所在的一段内相对的位置; / 计算的是一段内的相对位置/一段的高度，从而计算出权重来
-                    const skinWeight = ( y % sizing.segmentHeight ) / sizing.segmentHeight; 
+                    const skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
                     /* 举例1： */
                     // 设此时点是最高点：y = 32；
                     // 那么影响这个点的index的下标为 (32/8=4) 4和5；
@@ -141,7 +147,7 @@
                     // 对应的两个受骨骼影响的权重
                     skinWeights.push(1 - skinWeight, skinWeight, 0, 0);
                 }
-                
+
                 // TypeArray比Array性能更好，TypeArray内存是连续的，创建、读写更快
                 // TypeArray: 类数组，无符号整型不代表只能存1,2,3...；只要二进制没有超过其字节数就可以
                 // Unit8: 无符号整型8个比特位，即1个字节；范围 [0, 2^8) [0 - 255]
@@ -168,7 +174,12 @@
                 return bones;
             }
             function createMesh(geometry, bones) {
-                const material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true });
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0x156289,
+                    emissive: 0x072534,
+                    side: THREE.DoubleSide,
+                    flatShading: true,
+                });
                 const mesh = new THREE.SkinnedMesh(geometry, material);
                 const skeleton = new THREE.Skeleton(bones);
                 mesh.add(bones[0]);

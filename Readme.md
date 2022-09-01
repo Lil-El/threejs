@@ -124,7 +124,7 @@ Textures
 - 曲线
     - √ [ArcCurve](/docs/geometry/7.lathe.html): EllipseCurve的别名，相较于ellipse，arc的x和y的radius是一样的
     - CatmullRomCurve3
-    - CubicBezierCurve
+    - CubicBezierCurve: 贝塞尔曲线
     - CubicBezierCurve3
     - √ [EllipseCurve](/docs/geometry/7.lathe.html): 椭圆曲线
     - √ [LineCurve](/docs/geometry/7.lathe.html): 二维线段
@@ -157,16 +157,16 @@ Textures
 
 ### 辅助对象
 
-- ArrowHelper
-- AxesHelper
-- BoxHelper
+- √ [ArrowHelper](/docs/thing/3.1.points-colorfulBox.html): 箭头: 线段和椎体可以设置为物体
+- √ [AxesHelper](/docs/thing/3.1.points-colorfulBox.html): 三维空间的坐标轴
+- √ [BoxHelper](/docs/geometry/11.sphere.html): 将物体使用box包裹起来 [例子](https://threejs.org/examples/#webgl_buffergeometry_drawrange)
 - Box3Helper
-- CameraHelper
-- DirectionalLightHelper
+- √ [CameraHelper](/docs/geometry/11.sphere.html): 相机辅助
+- DirectionalLightHelper: TODO: 3.cone.html
 - GridHelper
 - PolarGridHelper
 - HemisphereLightHelper
-- PlaneHelper
+- √ [PlaneHelper](/docs/thing/4.skeleton.html): 模拟平面 Plane 的辅助对象, 传入Math.Plane可以生成平面
 - PointLightHelper
 - SkeletonHelper
 - SpotLightHelper
@@ -212,16 +212,16 @@ Textures
 
 ### 材质
 
-- LineBasicMaterial
-- LineDashedMaterial
+- √ [LineBasicMaterial](/start/2.line.html): 直线
+- √ [LineDashedMaterial](/start/2.line.html): 虚线
 - Material
-- MeshBasicMaterial
+- √ MeshBasicMaterial
 - MeshDepthMaterial
 - MeshDistanceMaterial
 - MeshLambertMaterial
 - MeshMatcapMaterial
 - MeshNormalMaterial
-- MeshPhongMaterial
+- √ MeshPhongMaterial: 可以**反光**的Material材质
 - MeshPhysicalMaterial
 - MeshStandardMaterial
 - MeshToonMaterial
@@ -244,7 +244,7 @@ Textures
 - √ [MathUtils](/docs/thing/3.points.html): 不需要new。可以生成随机数、度数与弧度转换、生成UUID、线性差值等
 - √ [Matrix3](/docs/thing/2.InstancedMesh.html): 矩阵。坐标的平移、转换、旋转。
 - Matrix4
-- Plane
+- √ [Plane](/docs/thing/4.skeleton.html): 构建无限延伸的二维平面。可以判断与线段、box、球等物体是否相交
 - Quaternion
 - Ray
 - Sphere
@@ -252,7 +252,7 @@ Textures
 - SphericalHarmonics3
 - Triangle
 - √ Vector2
-- √ [Vector3](/docs/geometry/13.Tube.html)
+- √ [Vector3](/docs/geometry/13.Tube.html): 三维空间的点坐标，可以表示坐标、向量等。能计算点的距离，向量，应用旋转等操作；[**单位向量**](/docs/thing/3.1.points-colorfulBox.html)
 - Vector4
 - 插值
     - CubicInterpolant
@@ -272,7 +272,7 @@ Textures
 - LOD: 多细节层次（LOD，Levels of Detail） TODO:
 - √ [Bone](/docs/thing/1.bone.html): 骨骼: 几乎和空白的Object3D相同。是skeleton的一部分，由SkinnedMesh依次使用；
 - √ [Skeleton](/docs/thing/4.skeleton.html): 骨架（包含了Bone）
-- √ [SkinnedMesh](/docs/thing/4.skeleton.html): 
+- √ [SkinnedMesh](/docs/thing/4.skeleton.html): 知识点较多，查看该文件
 - Sprite
 
 ### 渲染器
@@ -292,9 +292,9 @@ Textures
 
 ### 场景
 
-- Fog
-- FogExp2
-- Scene
+- √ Fog: 雾
+- √ [FogExp2](/docs/thing/3.1.points-colorfulBox.html): 雾
+- √ Scene: 场景
 
 ### 纹理贴图
 
