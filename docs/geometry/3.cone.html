@@ -81,10 +81,6 @@
             function createLight() {
                 const pointLight = new THREE.PointLight(0xffffff, 1.4);
                 pointLight.position.set(300, 300, 300);
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-                directionalLight.position = new THREE.Vector3(0, 1, 0);
-                directionalLight.target = new THREE.Vector3(0, 0, 0)
-                scene.add(directionalLight);
                 scene.add(pointLight);
             }
 

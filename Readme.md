@@ -74,10 +74,10 @@
 ### 摄像机
 
 - ArrayCamera
-- Camera
+- √ [Camera](https://zhuanlan.zhihu.com/p/510877492): 相机: near最小为0.1，near和far之间的是可视区域；投影时，需要调整相机尺寸（top、bottom、left、right）并将物体放在可视范围之内(near/far中间)  [例子](/docs/light/light.html)
 - CubeCamera
 - OrthographicCamera
-- PerspectiveCamera
+- √ [PerspectiveCamera](/docs/light/light.html): 透视相机
 - StereoCamera
 
 #### 常量
@@ -161,13 +161,13 @@ Textures
 - √ [AxesHelper](/docs/thing/3.1.points-colorfulBox.html): 三维空间的坐标轴
 - √ [BoxHelper](/docs/geometry/11.sphere.html): 将物体使用box包裹起来 [例子](https://threejs.org/examples/#webgl_buffergeometry_drawrange)
 - Box3Helper
-- √ [CameraHelper](/docs/geometry/11.sphere.html): 相机辅助
-- DirectionalLightHelper: TODO: 3.cone.html
-- GridHelper
+- √ [CameraHelper](/docs/geometry/11.sphere.html): 相机辅助 [例子](/docs/light/light.html)
+- √ [DirectionalLightHelper](/docs/light/light.html): 平行光辅助线
+- √ [GridHelper](/docs/light/light.html): 网格辅助线: 设置Material的depthWrite为false，可以使线不会抖动
 - PolarGridHelper
-- HemisphereLightHelper
+- √ [HemisphereLightHelper](/docs/light/light.html): 模拟半球形光源
 - √ [PlaneHelper](/docs/thing/4.skeleton.html): 模拟平面 Plane 的辅助对象, 传入Math.Plane可以生成平面
-- PointLightHelper
+- √ [PointLightHelper](/docs/light/light.html): 点光源辅助线
 - SkeletonHelper
 - SpotLightHelper
 
@@ -175,18 +175,18 @@ Textures
 
 - AmbientLight
 - AmbientLightProbe
-- DirectionalLight
-- HemisphereLight
+- √ [DirectionalLight](/docs/light/light.html): 平行光
+- √ [HemisphereLight](/docs/light/light.html): 半球光，将光源放置于场景之上
 - HemisphereLightProbe
 - Light
 - LightProbe
-- PointLight
+- √ [PointLight](/docs/light/light.html): 点光源
 - RectAreaLight
 - SpotLight
 - 阴影
     - LightShadow
-    - PointLightShadow
-    - DirectionalLightShadow
+    - √ [PointLightShadow](/docs/light/light.html): 点光源投影，将物体放在光圈内
+    - √ [DirectionalLightShadow](/docs/light/light.html): 平行光投影，将物体放在投影相机的可视范围内
     - SpotLightShadow
 
 ### 加载器
@@ -292,9 +292,9 @@ Textures
 
 ### 场景
 
-- √ Fog: 雾
+- √ [Fog](/docs/light/light.html): 雾
 - √ [FogExp2](/docs/thing/3.1.points-colorfulBox.html): 雾
-- √ Scene: 场景
+- √ [Scene](/docs/light/light.html): 场景
 
 ### 纹理贴图
 
