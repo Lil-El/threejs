@@ -174,7 +174,7 @@ Textures
 
 ### 灯光
 
-- AmbientLight
+-  √ AmbientLight: 均应照亮场景的物体；没有方向，没有阴影
 - AmbientLightProbe
 - √ [DirectionalLight](/docs/light/light.html): 平行光
 - √ [HemisphereLight](/docs/light/light.html): 半球光，将光源放置于场景之上

@@ -89,6 +89,8 @@
             }
 
             function createLight() {
+                const ambientLight = new THREE.AmbientLight(0xffffff);
+                scene.add(ambientLight);
                 // 点光源 - 降低亮度，避免将平行光投影照没了
                 const pointLight = new THREE.PointLight(0xffffff, 0.8);
                 pointLight.position.set(-100, 300, 100);
