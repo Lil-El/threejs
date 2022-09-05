@@ -80,7 +80,7 @@
 - √ [PerspectiveCamera](/docs/light/light.html): 透视相机
 - StereoCamera
 
-#### 常量
+#### 常量 x
 
 > 例如：Material中通过常量设置渲染哪一面THREE.FrontSide等。
 Animation
@@ -94,8 +94,8 @@ Textures
 
 - √ [BufferAttribute](/docs/thing/3.points.html): 用于BufferGeometry设置属性值（顶点、颜色等）
 - √ [BufferGeometry](/start/5.bufferGeometry.html): geometry的父类
-- Clock
-- EventDispatcher
+- Clock: 时间相关
+- EventDispatcher: 事件相关，可以自定义obj的事件监听函数
 - GLBufferAttribute
 - InstancedBufferAttribute
 - InstancedBufferGeometry
@@ -104,7 +104,7 @@ Textures
 - InterleavedBufferAttribute
 - Layers
 - √ [Object3D](/docs/thing/2.InstancedMesh.html): thing的父类
-- Raycaster
+- Raycaster: 光线投射，实现鼠标拾取功能
 - Uniform
 - √ BufferAttributes
     - √ [BufferAttribute Types](/docs/thing/3.points.html): Float32BufferAttribute, Int32BufferAttribute, Uint8BufferAttribute等许多都继承自BufferAttribute；会将array转换为对应的Type Array
@@ -174,7 +174,7 @@ Textures
 
 ### 灯光
 
--  √ AmbientLight: 均应照亮场景的物体；没有方向，没有阴影
+-  √ [AmbientLight](/docs/light/light.html): 均应照亮场景的物体；没有方向，没有阴影
 - AmbientLightProbe
 - √ [DirectionalLight](/docs/light/light.html): 平行光
 - √ [HemisphereLight](/docs/light/light.html): 半球光，将光源放置于场景之上
@@ -226,7 +226,7 @@ Textures
 - MeshPhysicalMaterial
 - MeshStandardMaterial
 - MeshToonMaterial
-- PointsMaterial
+- √ [PointsMaterial](/docs/thing/3.points.html): 点物体的材质
 - RawShaderMaterial
 - ShaderMaterial
 - ShadowMaterial
@@ -236,7 +236,7 @@ Textures
 
 - Box2
 - Box3
-- √ Color
+- √ [Color](/docs/raycaster/index.html): 颜色生成，计算；`new THREE.Color() * Math.random();`, `Color1.equals(Color2)`
 - Cylindrical
 - Euler
 - Frustum
@@ -244,7 +244,7 @@ Textures
 - Line3
 - √ [MathUtils](/docs/thing/3.points.html): 不需要new。可以生成随机数、度数与弧度转换、生成UUID、线性差值等
 - √ [Matrix3](/docs/thing/2.InstancedMesh.html): 矩阵。坐标的平移、转换、旋转。
-- Matrix4
+- √ [Matrix4](/docs/thing/2.InstancedMesh.html): 矩阵。坐标的平移、转换、旋转。
 - √ [Plane](/docs/thing/4.skeleton.html): 构建无限延伸的二维平面。可以判断与线段、box、球等物体是否相交
 - Quaternion
 - Ray
@@ -264,7 +264,7 @@ Textures
 ### 物体
 
 - √ Group
-- √ [InstancedMesh](/docs/thing/2.InstancedMesh.html): 实例化网格；用来渲染大量具有相同geometry和material的物体，提升性能
+- √ [InstancedMesh](/docs/thing/2.InstancedMesh.html): 实例化网格；用来渲染大量具有相同geometry和material的物体，提升性能; [例子](/docs/raycaster/index.html)
 - √ [Line](/start/2.line.html)
 - √ LineLoop: 将第一个、最后一个点连接起来
 - √ [LineSegments](/docs/geometry/13.Tube.html): 线段; 在若干对的顶点之间绘制的一系列的线。(也可是辅助查看物体的顶点)
@@ -311,7 +311,7 @@ Textures
 - Texture
 - VideoTexture
 
-### 示例
+### examples
 
 ### 动画
 
@@ -348,6 +348,10 @@ Textures
 
 - LightProbeGenerator
 
+### 后期处理
+
+- EffectComposer
+
 ### 加载器
 
 - DRACOLoader
@@ -362,21 +366,17 @@ Textures
 - SVGLoader
 - TGALoader
 
-### 物体
+### 物体 x
 
-- Lensflare
+- Lensflare: 镜头光晕, 和light一起使用
 
-### 后期处理
-
-- EffectComposer
-
-### 导出器
+### 导出器 x
 
 - ColladaExporter
 - GLTFExporter
 - PLYExporter
 
-### 数学库
+### 数学库 x
 
 - LookupTable
 - MeshSurfaceSampler
@@ -388,13 +388,13 @@ Textures
 - VertexNode
 - VertexList
 
-### 渲染器
+### 渲染器 x
 
 - CSS2DRenderer
 - CSS3DRenderer
 - SVGRenderer
 
-### 实用工具
+### 实用工具 x
 
 - BufferGeometryUtils
 - SceneUtils

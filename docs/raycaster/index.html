@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, mesh, obj, light, orbitControl;
+            const color = new THREE.Color();
+            const white = new THREE.Color(0xffffff);
+            const raycaster = new THREE.Raycaster();
+            const pointer = new THREE.Vector2(1, 1);
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                camera.position.set(540, 540, 540);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+                orbitControl.target = new THREE.Vector3(200, 200, 200);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createListener();
+                createThing();
+
+                scene.add(mesh);
+            }
+
+            function createThing() {
+                const count = 10;
+                geometry = new THREE.SphereGeometry(20);
+                const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                mesh = new THREE.InstancedMesh(geometry, material, count ** 3);
+
+                const m4 = new THREE.Matrix4();
+                let index = 0;
+                for (let i = 0; i < count; i++) {
+                    for (let j = 0; j < count; j++) {
+                        for (let k = 0; k < count; k++) {
+                            m4.setPosition(i * 42, j * 42, k * 42);
+                            mesh.setMatrixAt(index, m4);
+                            mesh.setColorAt(index, color);
+                            index++;
+                        }
+                    }
+                }
+                return mesh;
+            }
+
+            function createLight() {
+                const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+                light.position.set(0, 1, 0);
+                scene.add(light);
+            }
+
+            function createListener() {
+                document.addEventListener("mousemove", event => {
+                    event.preventDefault();
+                    // 区间在 -1,1之间
+                    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                });
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // 通过摄像机和鼠标位置更新射线
+                raycaster.setFromCamera(pointer, camera);
+                // 计算物体和射线的焦点
+                const intersects = raycaster.intersectObject(mesh);
+                // 所有相交的ball
+                intersects.length && console.log(intersects);
+                // 只处理第一个
+                if (intersects && intersects[0]) {
+                    const instanceId = intersects[0].instanceId;
+                    mesh.getColorAt(instanceId, color);
+                    if (color.equals(white)) {
+                        const r = THREE.MathUtils.randFloat(0, 1);
+                        const g = THREE.MathUtils.randFloat(0, 1);
+                        const b = THREE.MathUtils.randFloat(0, 1);
+                        mesh.setColorAt(instanceId, new THREE.Color(r, g, b));
+                        mesh.instanceColor.needsUpdate = true;
+                    }
+                }
+
+                orbitControl.update();
+                renderer.render(scene, camera);
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

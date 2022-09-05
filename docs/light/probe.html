@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <div>
+            <p>
+                光照探针是一种在3D场景中添加光源的另一种方法。与经典光源（平行光、点光、聚光）不同，
+                光照探针不发光。相反，光照探针存储着有关穿过3D空间的光线的信息。
+                渲染过程中，通过使用来自光照探针的数据，来逼近打到3D物体上的光线。
+            </p>
+            <p>
+                光照探针通常从（辐射）环境贴图中创建。 LightProbeGenerator 类可以根据 CubeTexture 或 WebGLCubeRenderTarget
+                的实例来创建光照探针。 但是，光照估算数据同样可以以其他形式提供，例如，通过WebXR。
+                这将能够渲染可对真实世界的光照做出反应的增强现实内容。
+            </p>
+        </div>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let cube, light, orbitControl, hemiHelper, dirHelper, pointHelper, directionalLight;
+
+            // TODO: 做了贴图后，再来实现这个
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xa0a0a0);
+                scene.fog = new THREE.Fog(0xa0a0a0, 500, 1000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 120, 190);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.shadowMap.enabled = true;
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+                createCube();
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(4000, 4000);
+                const material = new THREE.MeshPhongMaterial({ color: 0x999999, side: THREE.DoubleSide, depthWrite: false });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                plane.receiveShadow = true;
+                scene.add(plane);
+
+                // 网格一共大小为4000，分成20格
+                const grid = new THREE.GridHelper(4000, 20, 0x000000, 0x000000);
+                grid.material.opacity = 0.2;
+                grid.material.transparent = true;
+                scene.add(grid);
+            }
+
+            function createCube() {
+                const box = new THREE.BoxGeometry(100, 100, 100);
+                box.computeBoundingBox();
+                const material1 = new THREE.MeshPhongMaterial({ vertexColors: true });
+
+                const colors = box.getAttribute("position").array.slice();
+                for (let i = 0, l = colors.length; i < l; i++) {
+                    if (colors[i] > 0) colors[i] = 0.5;
+                    else colors[i] = 0;
+                }
+                box.setAttribute("color", new THREE.BufferAttribute(colors, 3, false));
+
+                const cube = new THREE.Mesh(box, material1);
+                cube.castShadow = true;
+                cube.receiveShadow = false;
+                cube.rotation.y = 0;
+                cube.position.y = 50;
+                scene.add(cube);
+                return cube;
+            }
+
+            function createLight() {
+                const ambientLight = new THREE.AmbientLightProbe(0xffffff, 1);
+                scene.add(ambientLight);
+                const hemiLight = new THREE.HemisphereLightProbe(0xffffff, 0xff00f4, 1);
+                scene.add(hemiLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>
