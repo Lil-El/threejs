@@ -82,6 +82,7 @@
 
 #### 常量
 
+> 例如：Material中通过常量设置渲染哪一面THREE.FrontSide等。
 Animation
 Core
 CustomBlendingEquation
@@ -102,7 +103,7 @@ Textures
 - InterleavedBuffer
 - InterleavedBufferAttribute
 - Layers
-- Object3D
+- √ [Object3D](/docs/thing/2.InstancedMesh.html): thing的父类
 - Raycaster
 - Uniform
 - √ BufferAttributes
