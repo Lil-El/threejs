@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { FlyControls } from "three/controls/FlyControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, mesh, obj, light, controller;
+            const clock = new THREE.Clock();
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                camera.position.set(540, 540, 540);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                controller = new FlyControls(camera, renderer.domElement);
+                controller.autoForward = false;
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createThing();
+
+                scene.add(mesh);
+            }
+
+            function createThing() {
+                const count = 10;
+                geometry = new THREE.SphereGeometry(20);
+                const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                mesh = new THREE.InstancedMesh(geometry, material, count ** 3);
+
+                const m4 = new THREE.Matrix4();
+                let index = 0;
+                for (let i = 0; i < count; i++) {
+                    for (let j = 0; j < count; j++) {
+                        for (let k = 0; k < count; k++) {
+                            m4.setPosition(i * 42, j * 42, k * 42);
+                            mesh.setMatrixAt(index, m4);
+                            index++;
+                        }
+                    }
+                }
+                return mesh;
+            }
+
+            function createLight() {
+                const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+                light.position.set(0, 1, 0);
+                scene.add(light);
+            }
+
+            function animate() {
+                const delta = clock.getDelta();
+                requestAnimationFrame(animate);
+                controller.update(delta * 100);
+                renderer.render(scene, camera);
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

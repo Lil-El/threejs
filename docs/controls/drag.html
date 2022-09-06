@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { DragControls } from "three/controls/DragControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+            let geometry,
+                objects = [],
+                light,
+                enableSelection = false,
+                controls,
+                group;
+            const mouse = new THREE.Vector2(),
+                raycaster = new THREE.Raycaster();
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                camera.position.set(540, 540, 540);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createThing();
+                group = new THREE.Group();
+                scene.add(group);
+
+                controls = new DragControls(objects, camera, renderer.domElement);
+                controls.addEventListener("drag", render);
+                window.addEventListener("resize", evt => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    render();
+                });
+            }
+
+            function createThing() {
+                const geometry = new THREE.BoxGeometry(40, 40, 40);
+                for (let i = 0; i < 200; i++) {
+                    const object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+
+                    object.position.x = Math.random() * 1000 - 500;
+                    object.position.y = Math.random() * 600 - 300;
+                    object.position.z = Math.random() * 800 - 400;
+
+                    object.rotation.x = Math.random() * 2 * Math.PI;
+                    object.rotation.y = Math.random() * 2 * Math.PI;
+                    object.rotation.z = Math.random() * 2 * Math.PI;
+
+                    object.scale.x = Math.random() * 2 + 1;
+                    object.scale.y = Math.random() * 2 + 1;
+                    object.scale.z = Math.random() * 2 + 1;
+
+                    scene.add(object);
+
+                    objects.push(object);
+                }
+            }
+
+            function createLight() {
+                const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+                light.position.set(0, 1, 0);
+                scene.add(light);
+            }
+
+            function render() {
+                renderer.render(scene, camera);
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    render();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

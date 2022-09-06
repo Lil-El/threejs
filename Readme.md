@@ -321,13 +321,13 @@ Textures
 
 ### 控制
 
-- DragControls
-- FirstPersonControls
-- FlyControls
-- OrbitControls
-- PointerLockControls
+- √ [DragControls](/docs/controls/drag.html)
+- FirstPersonControls: 是fly的另一种实现
+- √ [FlyControls](/docs/controls/fly.html)
+- √ OrbitControls
+- PointerLockControls: 锁定鼠标
 - TrackballControls
-- TransformControls
+- TransformControls: 变换控制，可以修改物体的位置
 
 ### 几何体
 
