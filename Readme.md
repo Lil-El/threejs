@@ -76,7 +76,7 @@
 - ArrayCamera
 - √ [Camera](https://zhuanlan.zhihu.com/p/510877492): 相机: near最小为0.1，near和far之间的是可视区域；投影时，需要调整相机尺寸（top、bottom、left、right）并将物体放在可视范围之内(near/far中间)  [例子](/docs/light/light.html)
 - CubeCamera
-- OrthographicCamera
+- √ [OrthographicCamera](/docs/controls/trackBall.html): 正交相机，可以展示所有物体，不能透视到物体之后；[例子](https://threejs.org/examples/#misc_controls_trackball)
 - √ [PerspectiveCamera](/docs/light/light.html): 透视相机
 - StereoCamera
 
@@ -326,7 +326,7 @@ Textures
 - √ [FlyControls](/docs/controls/fly.html)
 - √ OrbitControls
 - PointerLockControls: 锁定鼠标; TODO:
-- TrackballControls
+- √ [TrackballControls](/docs/controls/trackBall.html): 这个控制器在up方向可以一直转动
 - TransformControls: 变换控制，可以修改物体的位置
 
 ### 几何体

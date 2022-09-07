@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+            import { TrackballControls } from "three/controls/TrackballControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, mesh, obj, light, controller;
+
+            function init() {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x444444);
+                scene.fog = new THREE.Fog(0x444444, 500, 1000);
+
+                /**
+                 *  left — 摄像机视锥体左侧面。
+                    right — 摄像机视锥体右侧面。
+                    top — 摄像机视锥体上侧面。
+                    bottom — 摄像机视锥体下侧面。
+                    near — 摄像机视锥体近端面。
+                    far — 摄像机视锥体远端面。
+                 */
+                let frustumSize = 400;
+                let aspect = window.innerWidth / window.innerHeight;
+
+                camera = new THREE.PerspectiveCamera(60, aspect, 1, 1000);
+                // camera = new THREE.OrthographicCamera(
+                //     (frustumSize * aspect) / -2,
+                //     (frustumSize * aspect) / 2,
+                //     frustumSize / 2,
+                //     frustumSize / -2,
+                //     1,
+                //     6000
+                // );
+
+                camera.position.set(540, 540, 540);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                body.appendChild(renderer.domElement);
+                
+                // Tips: new TrackballControls必须在body.appendChild之后，否则无法转动
+                controller = new TrackballControls(camera, renderer.domElement);
+                
+                createLight();
+                createThing();
+                
+                document.addEventListener("resize", () => {
+                    const aspect = window.innerWidth / window.innerHeight;
+
+                    camera.aspect = aspect;
+                    camera.updateProjectionMatrix();
+
+                    // orthographicCamera
+                    // camera.left = - frustumSize * aspect / 2;
+                    // camera.right = frustumSize * aspect / 2;
+                    // camera.top = frustumSize / 2;
+                    // camera.bottom = - frustumSize / 2;
+                    // camera.updateProjectionMatrix();
+
+                    renderer.setSize(window.innerWidth, window.innerHeight)
+                    controller.handleResize();
+
+                })
+            }
+
+            function createThing() {
+                const geometry = new THREE.CylinderGeometry(0, 10, 30, 4, 1);
+                const material = new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true });
+
+                for (let i = 0; i < 500; i++) {
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.x = (Math.random() - 0.5) * 1000;
+                    mesh.position.y = (Math.random() - 0.5) * 1000;
+                    mesh.position.z = (Math.random() - 0.5) * 1000;
+                    mesh.updateMatrix();
+                    mesh.matrixAutoUpdate = false;
+                    scene.add(mesh);
+                }
+            }
+
+            function createLight() {
+                const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+                light.position.set(0, 1, 0);
+                scene.add(light);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controller.update();
+                renderer.render(scene, camera);
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>
