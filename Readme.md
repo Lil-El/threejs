@@ -322,10 +322,10 @@ Textures
 ### 控制
 
 - √ [DragControls](/docs/controls/drag.html)
-- FirstPersonControls: 是fly的另一种实现
+- √ [FirstPersonControls](/docs/controls/firstPerson.html): 是fly的另一种实现
 - √ [FlyControls](/docs/controls/fly.html)
 - √ OrbitControls
-- PointerLockControls: 锁定鼠标
+- PointerLockControls: 锁定鼠标; TODO:
 - TrackballControls
 - TransformControls: 变换控制，可以修改物体的位置
 
@@ -399,3 +399,5 @@ Textures
 - BufferGeometryUtils
 - SceneUtils
 - SkeletonUtils
+
+控制 》贴图 》相机 》动画 》音频 》合成
