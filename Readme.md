@@ -326,8 +326,8 @@ Textures
 - √ [FlyControls](/docs/controls/fly.html)
 - √ OrbitControls
 - PointerLockControls: 锁定鼠标; TODO:
-- √ [TrackballControls](/docs/controls/trackBall.html): 这个控制器在up方向可以一直转动
-- TransformControls: 变换控制，可以修改物体的位置
+- √ [TrackballControls](/docs/controls/trackBall.html): 这个控制器在up方向可以一直转动; **创建控制器需要在dom创建之后进行**
+- √ [TransformControls](/docs/controls/transform.html): 变换控制，可以修改物体的位置、旋转等。
 
 ### 几何体
 
