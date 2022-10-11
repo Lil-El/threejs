@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <span>OrbitControl, PlaneGeometry</span>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, light, orbitControl, group;
+
+            function init() {
+                /* 创建场景、相机、渲染器 */
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1500);
+                camera.position.set(0, 420, 500);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+                orbitControl = Util.orbitControl(camera, body);
+
+                body.appendChild(renderer.domElement);
+
+                createLight();
+                createPlane();
+
+                let obj = createThing();
+                let wire = createWireframe(obj.geometry);
+                group = new THREE.Group();
+                group.add(obj);
+                group.add(wire);
+                scene.add(group);
+                group.position.y = 200;
+            }
+
+            function createPlane() {
+                const geometry = new THREE.PlaneGeometry(700, 700);
+                const material = new THREE.MeshBasicMaterial({ color: 0x404040, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                scene.add(plane);
+            }
+
+            function createThing() {
+                // 圆环半径、管道半径、管道、横截面分段、p、q
+                const geometry = new THREE.TorusKnotGeometry(60, 15, 60, 14);
+
+                geometry.computeBoundingBox();
+                const material1 = new THREE.MeshPhongMaterial({
+                    color: 0x156289,
+                    emissive: 0x072534,
+                    side: THREE.DoubleSide,
+                    flatShading: true,
+                });
+                const obj = new THREE.Mesh(geometry, material1);
+
+                return obj;
+            }
+
+            function createWireframe(geo) {
+                const wireframe = new THREE.WireframeGeometry(geo);
+                const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+                const line = new THREE.LineSegments(wireframe, material);
+                return line;
+            }
+
+            function createLight() {
+                const pointLight = new THREE.PointLight(0xffffff, 1.4);
+                pointLight.position.set(300, 300, 300);
+                scene.add(pointLight);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+                group.rotation.x += 0.005;
+                group.rotation.y += 0.005;
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

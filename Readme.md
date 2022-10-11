@@ -152,7 +152,7 @@ Textures
 - √ [SphereGeometry](/docs/geometry/11.sphere.html): 球缓冲几何体
 - √ TetrahedronGeometry: 四面缓冲几何体
 - √ [TorusGeometry](/docs/geometry/12.torus.html): 圆环缓冲几何体
-- √ TorusKnotGeometry: 圆环缓冲扭结几何体
+- √ [TorusKnotGeometry](/docs/geometry/14.toruKnot.html): 圆环缓冲扭结几何体
 - √ [TubeGeometry](/docs/geometry/13.Tube.html): 管道缓冲几何体
 - √ [WireframeGeometry](/docs/geometry/13.Wireframe.html): 网格几何体: 辅助物体, 对一个geometry以线框的形式进行查看
 
@@ -174,7 +174,7 @@ Textures
 
 ### 灯光
 
--  √ [AmbientLight](/docs/light/light.html): 均应照亮场景的物体；没有方向，没有阴影
+- √ [AmbientLight](/docs/light/light.html): 均应照亮场景的物体；没有方向，没有阴影
 - AmbientLightProbe
 - √ [DirectionalLight](/docs/light/light.html): 平行光
 - √ [HemisphereLight](/docs/light/light.html): 半球光，将光源放置于场景之上
@@ -400,4 +400,7 @@ Textures
 - SceneUtils
 - SkeletonUtils
 
-控制 》贴图 》相机 》动画 》音频 》合成
+贴图 》相机 》动画 》音频 》合成
+
+> wireframe、grid、line等线条发虚，可以material设置opacity，参考(/docs/light/light.html)
+> wireframe、grid、line等线条发虚，可以WebGLRender设置**抗锯齿**antialias: true，参考(/docs/material/1.MeshDept.html)
