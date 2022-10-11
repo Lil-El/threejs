@@ -51,7 +51,6 @@
                 let obj = createThing();
                 group = new THREE.Group();
                 group.add(obj);
-                // group.add(createWireframe(obj.geometry)); Material自带了wireframe
                 scene.add(group);
                 group.position.y = 200;
             }
@@ -68,17 +67,49 @@
                 // 圆环半径、管道半径、管道、横截面分段、p、q
                 const geometry = new THREE.TorusKnotGeometry(60, 15, 60, 14);
                 geometry.computeBoundingBox();
-
-                // 生成alphaMap贴图
                 const textureLoader = new THREE.TextureLoader();
+
+                // alphaMap贴图
                 const fibers = textureLoader.load("/assets/image/alphaMap.jpg");
                 fibers.wrapT = THREE.RepeatWrapping;
                 fibers.wrapS = THREE.RepeatWrapping;
                 fibers.repeat.set(9, 1);
+                // map贴图
+                const bricks = textureLoader.load( '/assets/image/brick_diffuse.jpg' );
+				bricks.wrapS = THREE.RepeatWrapping;
+				bricks.wrapT = THREE.RepeatWrapping;
+				bricks.repeat.set( 9, 1 );
+                // envMap贴图
+                const path = '/assets/image/';
+				const format = '.jpg';
+				const urls = [
+					path + 'px' + format, path + 'nx' + format,
+					path + 'py' + format, path + 'ny' + format,
+					path + 'pz' + format, path + 'nz' + format
+				];
+				const reflectionCube = cubeTextureLoader.load( urls );
+				const refractionCube = cubeTextureLoader.load( urls );
+				refractionCube.mapping = THREE.CubeRefractionMapping;
 
-                const material = new THREE.MeshDepthMaterial({ 
+                /**
+                 * 参考：
+                 * https://threejs.org/docs/scenes/material-browser.html#MeshBasicMaterial
+                 */ 
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0xffffff,
+                    envMap: null, // reflectionCube | refractionCube | null; 环境贴图
+                    map: bricks, // 颜色贴图
+                    alphaMap: null, // fibers; alpha贴图是一张灰度纹理，用于控制整个表面的不透明度。（黑色：完全透明；白色：完全不透明）。所以alphaMap.jpg是一个黑白的图片
+                    /**
+                        'THREE.MultiplyOperation
+                        'THREE.MixOperation'
+                        'THREE.AddOperation'
+                     */ 
+                    combine: THREE.MultiplyOperation,
+                    reflectivity: 1, // 环境贴图对表秒的影响程度
+                    refractionRatio: 0.9, // 空气折射率
+                    vertexColor: true,
                     wireframe: false, 
-                    alphaMap: fibers, /*null*/
                     // Material类公有属性
                     side: THREE.DoubleSide,
                     transparent: false,

@@ -10,39 +10,6 @@
 2. docs\
 3. examples
 
-## /three/examples/jsm(js)
-
-- animation
-- cameras
-- capabilities
-- controls
-- csm
-- curves
-- effects
-- environments
-- exporters
-- geometries
-- helpers
-- interactive
-- libs
-- lights
-- lines
-- loaders
-- math
-- misc
-- modifiers
-- node-editor
-- nodes
-- objects
-- offscreen
-- physics
-- postprocessing
-- renderers
-- shaders
-- textures
-- utils
-- webxr
-
 ## threejs docs category
 
 ### 动画
@@ -86,9 +53,9 @@
 Animation
 Core
 CustomBlendingEquation
-Materials
+√ [Materials](/docs/material/1.MeshDept.html): Side面
 Renderer
-Textures
+√ [Textures](/docs/material/1.MeshDept.html): 纹理常量; RepeatWrapping
 
 ### 核心
 
@@ -197,16 +164,16 @@ Textures
 - BufferGeometryLoader
 - Cache
 - CompressedTextureLoader
-- CubeTextureLoader
+- √ [CubeTextureLoader](/docs/material/2.MeshBasic.html)
 - DataTextureLoader
 - FileLoader
 - ImageBitmapLoader
-- ImageLoader
-- Loader
+- ImageLoader: 内部使用FileLoader来加载文件，并被 CubeTextureLoader、ObjectLoader、TextureLoader所使用。
+- Loader: 加载器的基类。
 - LoaderUtils
 - MaterialLoader
 - ObjectLoader
-- TextureLoader
+- √ [TextureLoader](/docs/material/1.MeshDept.html): 内部使用ImageLoader来加载文件
 - 管理器
     - DefaultLoadingManager
     - LoadingManager
@@ -215,14 +182,14 @@ Textures
 
 - √ [LineBasicMaterial](/start/2.line.html): 直线
 - √ [LineDashedMaterial](/start/2.line.html): 虚线
-- Material
-- √ MeshBasicMaterial
-- MeshDepthMaterial
-- MeshDistanceMaterial
+- √ [Material](/docs/material/1.MeshDept.html)
+- √ [MeshBasicMaterial](/docs/material/2.MeshBasic.html): 基础的网格材质，不受光照的影响。
+- √ [MeshPhongMaterial](/docs/geometry/14.toruKnot.html): 可以**反光**的Material材质
+- √ [MeshDepthMaterial](/docs/material/1.MeshDept.html): 按深度绘制几何体的材质。深度基于相机远近平面。白色最近，黑色最远。
+- MeshDistanceMaterial: TODO:
 - MeshLambertMaterial
 - MeshMatcapMaterial
 - MeshNormalMaterial
-- √ MeshPhongMaterial: 可以**反光**的Material材质
 - MeshPhysicalMaterial
 - MeshStandardMaterial
 - MeshToonMaterial
@@ -400,7 +367,8 @@ Textures
 - SceneUtils
 - SkeletonUtils
 
-贴图 》相机 》动画 》音频 》合成
+动画 》音频 》合成
 
 > wireframe、grid、line等线条发虚，可以material设置opacity，参考(/docs/light/light.html)
 > wireframe、grid、line等线条发虚，可以WebGLRender设置**抗锯齿**antialias: true，参考(/docs/material/1.MeshDept.html)
+ 
