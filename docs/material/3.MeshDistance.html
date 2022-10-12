@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link rel="stylesheet" href="/assets/style/common.css" />
+    </head>
+    <body>
+        <span>OrbitControl, PlaneGeometry</span>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "/node_modules/three/build/three.module.js",
+                    "three/controls/": "/node_modules/three/examples/jsm/controls/"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as Util from "/utils/index.js";
+            import * as THREE from "three";
+            import { OrbitControls } from "three/controls/OrbitControls.js";
+
+            const body = document.body;
+            let camera, scene, renderer;
+
+            let geometry, light, orbitControl, light1, light2;
+
+            function init() {
+                scene = new THREE.Scene();
+                scene.add(new THREE.AmbientLight(0x111122));
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+                camera.position.set(0, 10, 40);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight, false);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                orbitControl = Util.orbitControl(camera, body);
+                orbitControl.target.set( 0, 10, 0 );
+				orbitControl.update();
+
+                body.appendChild(renderer.domElement);
+
+                light1 = createLight(0x0088ff);
+
+                let obj = createThing();
+                scene.add(obj);
+            }
+
+            function generateTexture() {
+                const canvas = document.createElement("canvas");
+                canvas.width = 2;
+                canvas.height = 2;
+
+                const context = canvas.getContext("2d");
+                context.fillStyle = "white";
+                context.fillRect(0, 1, 2, 1);
+                return canvas;
+            }
+
+            function createThing() {
+                const geometry = new THREE.BoxGeometry(26, 26, 26);
+                geometry.computeBoundingBox();
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xa0adaf,
+                    shininess: 10,
+                    specular: 0x111111,
+                    side: THREE.BackSide,
+                });
+                const obj = new THREE.Mesh(geometry, material);
+                obj.receiveShadow = true;
+                return obj;
+            }
+
+            function createLight(color) {
+                // 光源
+                const light = new THREE.PointLight(color, 1.4, 20); // 20距离光就为0了
+                light.castShadow = true;
+                light.shadow.bias = -0.005; // 阴影贴图偏差，在曲面中
+                light.position.set(0, 0, 0); 
+
+                // 光源球体
+                let geometry = new THREE.SphereGeometry(0.3, 12, 6);
+                let material = new THREE.MeshBasicMaterial({ color });
+                material.color.multiplyScalar(1.5);
+                let sphere = new THREE.Mesh(geometry, material);
+                light.add(sphere); // 加进去是为了可以让光和球体同时旋转
+                
+                // 外层球的透明贴图（间隔效果）
+                const texture = new THREE.CanvasTexture(generateTexture());
+                texture.magFilter = THREE.NearestFilter;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.repeat.set(1, 4.5); // 决定外层球的透明间隔的数量
+                
+                // 外层球体
+                geometry = new THREE.SphereGeometry(2, 32, 8); // 周长约等于12，间隔有4.5个，约等于每个间隔长度为3
+                material = new THREE.MeshPhongMaterial({
+                    side: THREE.DoubleSide,
+                    alphaMap: texture,
+                    alphaTest: 0.5,
+                });
+                sphere = new THREE.Mesh(geometry, material);
+                sphere.castShadow = true;
+                sphere.receiveShadow = true;
+                light.add(sphere);
+
+                // 距离贴图，为object3d对象的customDistanceMaterial属性赋值
+                const distanceMaterial = new THREE.MeshDistanceMaterial({
+                    alphaMap: material.alphaMap,
+                    alphaTest: material.alphaTest,
+                });
+                sphere.customDistanceMaterial = distanceMaterial;
+
+                scene.add(light);
+                return light;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                orbitControl.update();
+                light1.rotation.x += 0.01;
+                light1.rotation.y += 0.01;
+                light1.rotation.z += 0.01;
+            }
+
+            import("/assets/javascript/WebGL.mjs").then(({ default: WebGL }) => {
+                if (WebGL.isWebGLAvailable()) {
+                    init();
+                    Util.onSizeChange(camera, renderer);
+                    animate();
+                } else {
+                    const warning = WebGL.getWebGLErrorMessage();
+                    body.appendChild(warning);
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -186,13 +186,13 @@ Renderer
 - √ [MeshBasicMaterial](/docs/material/2.MeshBasic.html): 基础的网格材质，不受光照的影响。
 - √ [MeshPhongMaterial](/docs/geometry/14.toruKnot.html): 可以**反光**的Material材质
 - √ [MeshDepthMaterial](/docs/material/1.MeshDept.html): 按深度绘制几何体的材质。深度基于相机远近平面。白色最近，黑色最远。
-- MeshDistanceMaterial: TODO:
-- MeshLambertMaterial
+- √ [MeshDistanceMaterial](/docs/material/3.MeshDistance.html): 用于使用PointLight来实现阴影映射
+- MeshLambertMaterial: 一种非光泽表面的材质，没有镜面高光。
 - MeshMatcapMaterial
 - MeshNormalMaterial
 - MeshPhysicalMaterial
 - MeshStandardMaterial
-- MeshToonMaterial
+- MeshToonMaterial: 卡通阴影
 - √ [PointsMaterial](/docs/thing/3.points.html): 点物体的材质
 - RawShaderMaterial
 - ShaderMaterial
@@ -266,9 +266,9 @@ Renderer
 
 ### 纹理贴图
 
-- CanvasTexture
+- √ [CanvasTexture](/docs/material/3.MeshDistance.html): 从Canvas元素中创建纹理贴图。
 - CompressedTexture
-- CubeTexture
+- CubeTexture: 立方纹理，由6张图片组成。对应了CubeTextureLoader
 - DataArrayTexture
 - Data3DTexture
 - DataTexture
