@@ -64,8 +64,6 @@
 
       // vertexColors 使用 position 和 color 进行着色
       const pointMaterial = new THREE.PointsMaterial({
-        // vertexShader: vertexShader,
-        // fragmentShader: fragmentShader,
         size: 0.1,
         transparent: true,
         vertexColors: true,
@@ -78,15 +76,36 @@
               ${shader.vertexShader}
             `
             .replace(`gl_PointSize = size;`, `gl_PointSize = size * sizes;`)
+            /**
+             * 1. clamp 是为了将 d 限制在 0-1 之间，避免计算 mix 时越界
+             * 2. 黄色 -> 紫色
+             * 3. abs 可看作是所有点在第一象限的映射，所有点的length，即距离原点的长度 === radius(10)
+             * 4. 计算 d ，使其尽量在 0-1 之间，
+             *    4.1. vec3(10) 时相当于缩小10倍，范围变为0-1，那么点距离原点的距离则都是1，即d = 1，那么所有的颜色都是纯紫色
+             *    4.2. vec3(5)  时缩小5倍，范围变为0-2，但是由于clamp，d 仍然 = 1；所以仍然都是紫色；
+             *    4.4. vec3(20) 时缩小20倍，范围变为0-0.5，那么d = 0.5，所以颜色是黄色和紫色的正中间混合色
+             *    4.5. vec3(10, 40, 10) 时 y 轴缩小40倍，以y轴观察，y为0是黄色，为10的远端是25%的黄紫混合色
+             *                             但是xz都是10，所以xz面上所有的点d=1，离原点越近是黄色，越远（10的位置）时是紫色
+             *                             结果就是y轴端是黄色，向xz轴逐渐扩散为紫色
+             *    4.6. vec3(40, 40, 10) 时，以x或y轴观察，x/y为0的都是黄色，x/y为10的都是25%混合色
+             *                             观察xy平面，离原点越近是黄色，越远是25%混合色
+             *                             观察z轴，离原点越近是黄色，越远是纯紫色；
+             *                             结果就是z轴远端是紫色，向xy平面扩散为25%混合色
+             *    4.7. vec3(20, 40, 10)，x轴远端是50%混合色，y轴远端是25%混合色，z轴远端是紫色
+             */
             .replace(
               `#include <color_vertex>`, // if(vertexColors) { vColor = vec3( 1.0 ); vColor *= color; }
               `
                 #include <color_vertex>
-                float d = length(abs(position) / vec3(40., 10., 40));
+                float d = length(abs(position) / vec3(10., 40., 10.));
                 d = clamp(d, 0., 1.);
-                vColor = mix(vec3(227., 155., 0.), vec3(100., 50., 255.), d) / 255.; // 颜色混合：黄色 -> 紫色
+                vColor = mix(vec3(227., 155., 0.), vec3(100., 50., 255.), d) / 255.;
               `
             )
+            /**
+             * 1. sin * cos 和 shift.x / 2 效果差不多
+             * 2. tan 范围是 -无穷 到 +无穷
+             */
             .replace(
               `#include <begin_vertex>`, // transformed = vec3(position);
               `
@@ -97,22 +116,28 @@
                 // transformed += vec3(shift.x / 2.0, shift.y / 2.0, shift.z / 2.0);
                 // transformed += vec3(sin(moveS) * cos(moveT), tan(moveT), cos(moveS) * sin(moveT)) * shift.a;
                 transformed += vec3(sin(moveS) * cos(moveT), cos(moveT), cos(moveS) * sin(moveT)) * shift.a;
+
+                // if (position.x < 0. || position.y < 0. || position.z < 0.) {
+                //  vColor = vec3(0.);
+                // }
               `
             );
 
-          shader.fragmentShader = `${shader.fragmentShader}`
-            .replace( // 变成圆点
-              `#include <clipping_planes_fragment>`,
-              `
-                #include <clipping_planes_fragment>
-                float d = length(gl_PointCoord.xy - 0.5);
-                if (d > 0.5) discard;
-              `
-            )
-            .replace( // 修改颜色
-              `vec4 diffuseColor = vec4( diffuse, opacity );`,
-              `vec4 diffuseColor = vec4( vColor, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
-            );
+          // shader.fragmentShader = `${shader.fragmentShader}`
+          //   .replace(
+          //     // 变成圆点
+          //     `#include <clipping_planes_fragment>`,
+          //     `
+          //       #include <clipping_planes_fragment>
+          //       float d = length(gl_PointCoord.xy - 0.5);
+          //       if (d > 0.5) discard;
+          //     `
+          //   )
+          //   .replace(
+          //     // 修改颜色
+          //     `vec4 diffuseColor = vec4( diffuse, opacity );`,
+          //     `vec4 diffuseColor = vec4( vColor, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
+          //   );
         },
       });
 
