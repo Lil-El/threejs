@@ -92,6 +92,8 @@
              *                             观察z轴，离原点越近是黄色，越远是纯紫色；
              *                             结果就是z轴远端是紫色，向xy平面扩散为25%混合色
              *    4.7. vec3(20, 40, 10)，x轴远端是50%混合色，y轴远端是25%混合色，z轴远端是紫色
+             *
+             * 5. TODO: mix 取值是[0,1]，还是[-1,2]
              */
             .replace(
               `#include <color_vertex>`, // if(vertexColors) { vColor = vec3( 1.0 ); vColor *= color; }
