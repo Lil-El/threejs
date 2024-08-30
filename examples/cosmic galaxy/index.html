@@ -93,7 +93,7 @@
              *                             结果就是z轴远端是紫色，向xy平面扩散为25%混合色
              *    4.7. vec3(20, 40, 10)，x轴远端是50%混合色，y轴远端是25%混合色，z轴远端是紫色
              *
-             * 5. TODO: mix 取值是[0,1]，还是[-1,2]
+             * 5. mix(a,b,x) 将 a-b 作为 0-1 的映射，x可以超过这个范围，按照比例计算结果
              */
             .replace(
               `#include <color_vertex>`, // if(vertexColors) { vColor = vec3( 1.0 ); vColor *= color; }
@@ -125,21 +125,27 @@
               `
             );
 
-          // shader.fragmentShader = `${shader.fragmentShader}`
-          //   .replace(
-          //     // 变成圆点
-          //     `#include <clipping_planes_fragment>`,
-          //     `
-          //       #include <clipping_planes_fragment>
-          //       float d = length(gl_PointCoord.xy - 0.5);
-          //       if (d > 0.5) discard;
-          //     `
-          //   )
-          //   .replace(
-          //     // 修改颜色
-          //     `vec4 diffuseColor = vec4( diffuse, opacity );`,
-          //     `vec4 diffuseColor = vec4( vColor, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
-          //   );
+          shader.fragmentShader = `${shader.fragmentShader}`
+            /**
+             * clipping_planes 裁剪平面
+             * 裁剪为圆点
+             * gl_PointCoord 内置的变量，它包含点纹理坐标系中的位置（范围从(0,0)到(1,1)）
+             * 0.5: 将(0,0)到(1,1)范围内的点和vec2(0.5,0.5)中心点计算距离，如果大于0.5就丢弃，最终就是一个圆形
+             * 1.0: 将(0,0)到(1,1)范围内的点和vec2(1.0,1.0)右下角计算距离，结果就是以右下角为圆心的1/4的扇形，半径为1
+             */
+            .replace(
+              `#include <clipping_planes_fragment>`,
+              `
+                #include <clipping_planes_fragment>
+                float d = length(gl_PointCoord.xy - 0.5); // float d = length(gl_PointCoord.xy - vec2(0.5, 0.5));
+                if (d > 0.5) discard;
+              `
+            );
+          // 修改颜色
+          // .replace(
+          //   `vec4 diffuseColor = vec4( diffuse, opacity );`,
+          //   `vec4 diffuseColor = vec4( vColor, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
+          // );
         },
       });
 
@@ -184,7 +190,7 @@
       function animation() {
         let t = clock.getElapsedTime() * 0.05;
         gu.time.value = t * Math.PI;
-        // pointMesh.rotation.y = t * 0.5;
+        pointMesh.rotation.y = t * 0.5;
 
         renderer.render(scene, camera);
         controls.update();
