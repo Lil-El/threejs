@@ -21,9 +21,54 @@ function createYolk() {
 }
 
 function createAlbumen() {
-  const geometry = new THREE.CircleGeometry(4, 40);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const clock = new THREE.Clock();
+
+  const gu = {
+    time: {
+      value: 0,
+    },
+  };
+
+  const geometry = new THREE.CircleGeometry(4, 40 / 4);
+  geometry.setAttribute(
+    "color",
+    new THREE.Float16BufferAttribute(new Array(geometry.attributes.position.count * 3).fill(1), 3)
+  );
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    // vertexColors: true,
+    blending: THREE.AdditiveBlending,
+    onBeforeCompile(shader) {
+      shader.uniforms.time = gu.time;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <common>",
+        `
+          #include <common>
+          uniform float time;
+        `
+      );
+
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        `
+          #include <begin_vertex>
+          transformed += vec3(sin(time), sin(time), 0.0);
+        `
+      );
+      console.log(shader.vertexShader);
+      //  shader.fragmentShader
+    },
+  });
+
   const mesh = new THREE.Mesh(geometry, material);
+
+  function animate() {
+    gu.time.value = clock.getElapsedTime();
+    requestAnimationFrame(animate);
+  }
+  animate();
 
   return mesh;
 }
