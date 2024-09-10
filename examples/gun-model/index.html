@@ -14,21 +14,22 @@
                 <div>
                     <h1>Camera</h1>
                     <hr />
-                    <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="0" name="xAxis" /></div>
+                    <div><label for="xAxis">xAxis：</label><input type="number" step="1" value="-4" name="xAxis" /></div>
                     <div><label for="yAxis">yAxis：</label><input type="number" step="1" value="0" name="yAxis" /></div>
-                    <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="30" name="zAxis" /></div>
+                    <div><label for="zAxis">zAxis：</label><input type="number" step="1" value="8" name="zAxis" /></div>
                 </div>
                 <div>
-                    <h1>DrawCount</h1>
+                    <h1>Light</h1>
                     <hr />
-                    <div><label for="DrawCount">DrawCount：</label><input type="number" min="2" step="1" value="2" name="DrawCount" /></div>
+                    <div><label for="pointLight">pointLight：</label><input type="color" value="#ffffff" name="pointLight" /></div>
                 </div>
                 <div>
                     <h1>Update</h1>
                     <hr />
                     <div>
                         <label for="isUpdate">isUpdate：</label>
-                        <input type="radio" name="isUpdate" value="Yes" checked /> Yes <input type="radio" name="isUpdate" value="No" /> No
+                        <input type="radio" name="isUpdate" value="Yes" checked /> Yes
+                        <input type="radio" name="isUpdate" value="No" /> No
                     </div>
                 </div>
             </div>
@@ -43,67 +44,54 @@
         </script>
         <script type="module">
             import * as THREE from "three";
-            // 要素对象创建
+            import { OBJLoader } from "/node_modules/three/examples/jsm/loaders/OBJLoader.js";
+            import { MTLLoader } from "/node_modules/three/examples/jsm/loaders/MTLLoader.js";
+
             const container = $("#three-container");
             const containerWidth = container.innerWidth();
             const containerHeight = container.innerHeight();
             const scene = new THREE.Scene();
+
             const camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 1, 100);
+            // 创建光源、环境光，并添加至scene中；
+            /**
+             *  可以将object3D添加至另一个object3D中，然后添加至scene中。
+             *
+             *  将object添加到camera，将camera加入scene中；
+             *  camera.add(ambientLight);
+             *  scene.add(pointLight);
+             *  scene.add(camera);
+             *  或者，将ambientLight加到pointLight中，然后pointLight加到scene中。
+             */
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 100);
+            pointLight.position.set(-10, -10, 10);
+            scene.add(pointLight);
+
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(containerWidth, containerHeight, false);
+
             container.append(renderer.domElement);
 
-            /**
-             * BufferGeometry：
-             * 是面片、线或点几何体的有效表述。包括顶点位置，面片索引、法相量、颜色值、UV 坐标和自定义缓存属性值。
-             * 使用 BufferGeometry 可以有效减少向 GPU 传输上述数据所需的开销
-             */ 
-            const MAX_POINTS = 500;
-            const geometry = new THREE.BufferGeometry();
-            const position = new Float32Array(MAX_POINTS * 3); // 大小1500
-            geometry.setAttribute("position", new THREE.BufferAttribute(position, 3)); // 每3个为一组（表示x,y,z坐标）
-            /**
-             * drawRange属性：用于判断几何体的哪个部分需要被渲染
-             * 不可以直接设置，通过setDrawRange去设置
-             * setDrawRange(start: 0, count: Infinity);
-             * 
-             * line有1500个顶点，即每个顶点有三个坐标点；drawCount表示渲染到第n-1个顶点，所以：
-             * 值：2  =>  渲染了1条线
-             * 值：10 =>  渲染了9条线
-             * 
-             * 例：绘制一个矩形(由两个三角形（面片）构成，每三个点是一个三角形的顶点)
-             * Float32Array([
-             * 	 -1.0, -1.0,  1.0,
-             *   1.0, -1.0,  1.0,
-             *   1.0,  1.0,  1.0,
-             * 
-             *   1.0,  1.0,  1.0,
-             *   -1.0,  1.0,  1.0,
-             *   -1.0, -1.0,  1.0
-             * ])
-             */ 
-            const drawCount = 2;
-            geometry.setDrawRange(0, drawCount);
-            // 创建材质，物体
-            const material = new THREE.LineBasicMaterial({color: 0xff0000})
-            const line = new THREE.Line(geometry, material);
-            scene.add(line);
-            // position赋随机值
-            const positions = line.geometry.attributes.position.array;
-            let x, y, z, index;
-            x = y = z = index = 0;
-            for ( let i = 0, l = MAX_POINTS; i < l; i ++ ) {
-                positions[ index ++ ] = x;
-                positions[ index ++ ] = y;
-                positions[ index ++ ] = z;
+            // 创建材质、obj的loader
+            const mtlLoader = new MTLLoader();
+            const objLoader = new OBJLoader();
+            let gun;
+            mtlLoader.load("./OBJ-Railgun/Railgun_Prototype-Wavefront OBJ.mtl", material => {
+                objLoader.setMaterials(material);
+                objLoader.load("./OBJ-Railgun/Railgun_Prototype-Wavefront OBJ.obj", obj => {
+                    gun = obj;
+                    gun.traverse(function (child) {
+                        if (child.isMesh) {
+                            child.position.set(0, 0, 0);
+                            child.scale.set(10, 10, 10);
+                        }
+                    });
+                    scene.add(gun);
+                });
+            });
 
-                x += ( Math.random() - 0.5 ) * 30;
-                y += ( Math.random() - 0.5 ) * 30;
-                z += ( Math.random() - 0.5 ) * 30;
-            }
-
-
-            // 控制方法
             function setCameraPosition() {
                 const x = $("input[name=xAxis]").val();
                 const y = $("input[name=yAxis]").val();
@@ -132,18 +120,18 @@
                     $("input[name=zAxis]").val(~~camera.position.z + parseFloat(ev.originalEvent.deltaY / 100));
                     setCameraPosition();
                 });
-                $("input[name=DrawCount]").on("change", ev => {
-                    const drawCount = ev.target.value;
-                    geometry.setDrawRange(0, drawCount);
-                });
+                $("input[name=pointLight]").on("change", ev => {
+                    const color = ev.target.value;
+                    pointLight.color.setHex(color.replace("#", "0x"));
+                })
                 $("input[name=isUpdate]").on("change", ev => {
                     const isUpdate = ev.target.value;
-                    if (isUpdate == "Yes") {
+                    if(isUpdate == "Yes") {
                         gun.updateMatrix();
                     } else {
                         gun.matrixAutoUpdate = false;
                     }
-                });
+                })
             }
 
             /* 渲染场景 */
@@ -162,6 +150,8 @@
                     body.appendChild(warning);
                 }
             });
+
+            // https://threejs.org/examples/?q=light#webgl_lights_spotlight
         </script>
     </body>
 </html>
