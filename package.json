@@ -9,6 +9,8 @@
   "author": "Mino",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.142.0"
+    "d3": "^7.9.0",
+    "gsap": "^3.12.5",
+    "three": "^0.168.0"
   }
 }
