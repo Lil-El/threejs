@@ -29,15 +29,16 @@ function createAlbumen() {
     },
   };
 
-  const geometry = new THREE.CircleGeometry(4, 40 / 4);
-  geometry.setAttribute(
-    "color",
-    new THREE.Float16BufferAttribute(new Array(geometry.attributes.position.count * 3).fill(1), 3)
-  );
+  const geometry = new THREE.CircleGeometry(4, 40);
+
+  // 设置随机转变
+  const shift = new THREE.BufferAttribute(new Float32Array(geometry.attributes.position.count * 3), 3);
+  for (let i = 0; i < geometry.attributes.position.count; i++) {
+    shift.setXYZ(i, Math.random() * 2 * Math.PI, Math.random() * 2 * Math.PI, Math.random() * 0.5);
+  }
+  geometry.setAttribute("shift", shift);
 
   const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    // vertexColors: true,
     blending: THREE.AdditiveBlending,
     onBeforeCompile(shader) {
       shader.uniforms.time = gu.time;
@@ -47,6 +48,11 @@ function createAlbumen() {
         `
           #include <common>
           uniform float time;
+          attribute vec3 shift;
+
+          float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+          }
         `
       );
 
@@ -54,7 +60,7 @@ function createAlbumen() {
         "#include <begin_vertex>",
         `
           #include <begin_vertex>
-          transformed += vec3(sin(time), sin(time), 0.0);
+          transformed += vec3(sin(shift.x + time), sin(shift.y + time), 0.0) * shift.z;
         `
       );
       console.log(shader.vertexShader);
@@ -65,7 +71,7 @@ function createAlbumen() {
   const mesh = new THREE.Mesh(geometry, material);
 
   function animate() {
-    gu.time.value = clock.getElapsedTime();
+    gu.time.value = clock.getElapsedTime() * 0.5;
     requestAnimationFrame(animate);
   }
   animate();
