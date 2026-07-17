@@ -152,8 +152,8 @@
              * 圆点边缘处的 d 为 0.5，透明度取 0; 圆点中心处的 d 为 0，透明度取 1; 所以需要将 0.2和0.5 互换
              */
             .replace(
-              `vec4 diffuseColor = vec4( diffuse, opacity );`,
-              `vec4 diffuseColor = vec4( diffuse, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
+              `vec4 diffuseColor = vec4(diffuse, opacity);`,
+              `vec4 diffuseColor = vec4(diffuse, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
               // `vec4 diffuseColor = vec4( vColor, smoothstep(0.5, 0.2, d) * 0.5 + 0.5 );`
             );
         },

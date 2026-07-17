@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #amap-canvas {
+        width: 100%;
+        height: 100%;
+      }
+      #three-canvas {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="amap-canvas"></div>
+    <div id="three-canvas"></div>
+
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <!-- GLCustomLayer 只支持 three.js 142 版本的 WebGL1，高版本threejs采用 WebGL2 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.142/build/three.js"></script>
+    <script src="//webapi.amap.com/maps?v=2.0&key=9ec68095ef6c6bce0346aed898e46153"></script>
+    <script src="/node_modules/gsap/dist/gsap.js"></script>
+
+    <script aria-label="Config">
+      window.center = [109.125276, 34.65467];
+      window.depth = 10000; // 深 1w 米
+      window.provincePositionZ = 10000; // 省份高出 1w 米
+      window.linePositionZ = 20000; // 省份行政界线高出 2w 米
+      window._AMapSecurityConfig = {
+        securityJsCode: "88e7ca58ee7e98a0343e28ecf4f2b906",
+      };
+    </script>
+    <script aria-label="高德地图 + three.js + GLCustomLayer" type="module">
+      // 高德+three 的尺寸都是按照现实尺寸计算的
+
+      const map = (window.map = new AMap.Map("amap-canvas", {
+        center: window.center,
+        zooms: [4, 8],
+        zoom: 5,
+        viewMode: "3D",
+        mapStyle: "amap://styles/c70a9d2b3ba718227f5de60c61cb5085",
+      }));
+
+      let camera;
+      let renderer;
+      let scene;
+      let meshes = [];
+      // 数据转换工具
+      const customCoords = map.customCoords;
+
+      // 创建 GL 图层
+      const gllayer = new AMap.GLCustomLayer({
+        // 图层的层级
+        zIndex: 10,
+        // 初始化的操作，创建图层过程中执行一次。
+        init: (gl) => {
+          // 这里我们的地图模式是 3D，所以创建一个透视相机，相机的参数初始化可以随意设置，因为在 render 函数中，每一帧都需要同步相机参数，因此这里变得不那么重要。
+          // 如果你需要 2D 地图（viewMode: '2D'），那么你需要创建一个正交相机
+          camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 100, 1 << 30);
+
+          renderer = new THREE.WebGLRenderer({
+            context: gl, // 地图的 gl 上下文
+            // alpha: true,
+            // antialias: true,
+            // canvas: gl.canvas,
+          });
+
+          // 自动清空画布这里必须设置为 false，否则地图底图将无法显示
+          renderer.autoClear = false;
+          scene = new THREE.Scene();
+
+          // 环境光照和平行光
+          var aLight = new THREE.AmbientLight(0xffffff, 0.5);
+          var dLight = new THREE.DirectionalLight(0xffffff, 1);
+          dLight.position.set(10000, 10000, 20000);
+          scene.add(dLight);
+          scene.add(aLight);
+
+          // var data = customCoords.lngLatsToCoords([
+          //   [116.52, 39.79],
+          //   [116.54, 39.79],
+          //   [116.56, 39.79],
+          // ]);
+          // var texture = new THREE.TextureLoader().load(
+          //   "https://a.amap.com/jsapi_demos/static/demo-center-v2/three.jpeg",
+          // );
+          // texture.minFilter = THREE.LinearFilter;
+          // //  这里可以使用 three 的各种材质
+          // var mat = new THREE.MeshPhongMaterial({
+          //   color: 0xfff0f0,
+          //   depthTest: true,
+          //   transparent: true,
+          //   map: texture,
+          // });
+          // var geo = new THREE.BoxBufferGeometry(100, 100, 500);
+          // for (let i = 0; i < data.length; i++) {
+          //   const d = data[i];
+          //   var mesh = new THREE.Mesh(geo, mat);
+          //   mesh.position.set(d[0], d[1], 0);
+          //   meshes.push({
+          //     mesh,
+          //     count: i,
+          //   });
+          //   scene.add(mesh);
+          // }
+
+          /**
+           * 以上是高德示例代码
+           * 以下是自己的代码
+           * */
+
+          fetch("./geojson/shaanxi.geojson")
+            .then((res) => res.json())
+            .then((data) => createMap(data));
+
+          function createMap(data) {
+            const map = new THREE.Group();
+            map.name = "MAP";
+            scene.add(map);
+
+            createLand(map, data);
+            createBoundary(map, data);
+          }
+
+          function createLand(map, data) {
+            data.features.forEach((feature) => {
+              const group = new THREE.Group();
+              group.name = "PROVINCE";
+
+              if (feature.type === "Feature") {
+                const { geometry } = feature;
+                const { type, coordinates } = geometry;
+
+                if (type === "MultiPolygon") {
+                  coordinates.forEach((polygon) => {
+                    group.add(createPolygon("#020423", polygon));
+                  });
+                } else if (type === "Polygon") {
+                  group.add(createPolygon("#020423", coordinates));
+                }
+              }
+              group.position.z = 1;
+
+              map.add(group);
+            });
+          }
+
+          function createBoundary(map, data) {
+            data.features.forEach((feature) => {
+              const group = new THREE.Group();
+              group.name = "BOUNDARY";
+
+              if (feature.type === "Feature") {
+                const { geometry } = feature;
+                const { type, coordinates } = geometry;
+
+                if (type === "MultiPolygon") {
+                  coordinates.forEach((polygon) => {
+                    group.add(createPolyline(polygon));
+                  });
+                } else if (type === "Polygon") {
+                  group.add(createPolyline(coordinates));
+                }
+              }
+              group.position.z = 2;
+
+              map.add(group);
+            });
+          }
+
+          function createPolygon(color, polygon) {
+            const shape = new THREE.Shape();
+
+            polygon.forEach((ring) => {
+              ring.forEach((point) => {
+                const [p] = customCoords.lngLatsToCoords([point]);
+                const [x, y] = p;
+                shape.moveTo(x, y);
+                shape.lineTo(x, y);
+              });
+
+              shape.closePath();
+            });
+
+            shape.closePath();
+
+            const geometry = new THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false });
+            const surfaceMaterial = new THREE.MeshStandardMaterial({ color, side: THREE.FrontSide });
+            const sideMaterial = new THREE.MeshLambertMaterial({ color: "#d0e1f5", side: THREE.FrontSide });
+            const mesh = new THREE.Mesh(geometry, [surfaceMaterial, sideMaterial]);
+            mesh.castShadow = true;
+
+            return mesh;
+          }
+
+          function createPolyline(polyline) {
+            const vertices = [];
+
+            polyline.forEach((ring) => {
+              ring.forEach((point) => {
+                const [p] = customCoords.lngLatsToCoords([point]);
+                const [x, y] = p;
+                vertices.push(new THREE.Vector3(x, y, 0));
+              });
+            });
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setFromPoints(vertices);
+
+            const material = new THREE.LineBasicMaterial({ color: 0x25a2b3 });
+
+            const line = new THREE.Line(geometry, material);
+
+            return line;
+          }
+        },
+        render: () => {
+          // 这里必须执行！！重新设置 three 的 gl 上下文状态。
+          renderer.resetState();
+          // 重新设置图层的渲染中心点，将模型等物体的渲染中心点重置
+          // 否则和 LOCA 可视化等多个图层能力使用的时候会出现物体位置偏移的问题
+          customCoords.setCenter([116.52, 39.79]);
+          var { near, far, fov, up, lookAt, position } = customCoords.getCameraParams();
+
+          // 2D 地图下使用的正交相机
+          // var { near, far, top, bottom, left, right, position, rotation } = customCoords.getCameraParams();
+
+          // 这里的顺序不能颠倒，否则可能会出现绘制卡顿的效果。
+          camera.near = near;
+          camera.far = far;
+          camera.fov = fov;
+          camera.position.set(...position);
+          camera.up.set(...up);
+          camera.lookAt(...lookAt);
+          camera.updateProjectionMatrix();
+
+          // 2D 地图使用的正交相机参数赋值
+          // camera.top = top;
+          // camera.bottom = bottom;
+          // camera.left = left;
+          // camera.right = right;
+          // camera.position.set(...position);
+          // camera.updateProjectionMatrix();
+
+          renderer.render(scene, camera);
+
+          // 这里必须执行！！重新设置 three 的 gl 上下文状态。
+          renderer.resetState();
+        },
+      });
+      map.add(gllayer);
+
+      // 动画
+      function animate() {
+        map.render();
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      window.addEventListener("resize", onWindowResize);
+
+      map.on("click", (e) => {
+        console.log(e);
+      });
+
+      setTimeout(() => {
+        initialAnimation();
+      }, 500);
+
+      function initialAnimation() {
+        const allItems = scene.getObjectByName("PROVINCE").parent.children;
+        const lands = allItems.filter((i) => i.name === "PROVINCE");
+        const boundaries = allItems.filter((i) => i.name === "BOUNDARY");
+
+        const timeline = gsap.timeline();
+
+        timeline.to(
+          { pitch: map.getPitch(), rotation: map.getRotation(), zoom: map.getZoom() },
+          {
+            pitch: 65,
+            zoom: 7.5,
+            duration: 2,
+            ease: "power2.out",
+            onUpdate() {
+              const { pitch, rotation, zoom } = this.targets()[0];
+              map.setPitch(pitch);
+              map.setRotation(rotation);
+              map.setZoom(zoom);
+            },
+          },
+        );
+
+        // 第二阶段动画开始时间: 第一阶段动画结束时间 + 1s
+        const secondPhaseStart = timeline.duration() + 1;
+
+        lands.forEach((land) => {
+          // to函数参数：targets 动画目标对象, vars 配置, position 动画在时间轴上的位置
+          timeline.to(land.position, { z: window.provincePositionZ, duration: 3 }, secondPhaseStart);
+
+          timeline.to(
+            { depth: 1 },
+            {
+              depth: window.depth,
+              duration: 3,
+              onUpdate() {
+                const positions = land.children.at(0).geometry.attributes.position.array;
+                const halfDepth = this.targets()[0].depth / 2;
+                for (let i = 0; i < positions.length; i += 3) {
+                  positions[i + 2] = positions[i + 2] > 0 ? halfDepth : -halfDepth;
+                }
+                land.children.at(0).geometry.attributes.position.needsUpdate = true;
+              },
+            },
+            secondPhaseStart,
+          );
+        });
+
+        boundaries.forEach((boundary) => {
+          timeline.to(boundary.position, { z: window.linePositionZ, duration: 3 }, secondPhaseStart);
+        });
+      }
+    </script>
+  </body>
+</html>

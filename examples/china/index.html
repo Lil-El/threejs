@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -111,15 +111,7 @@
       import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
       import { GlitchPass } from "three/addons/postprocessing/GlitchPass.js";
 
-      let geoJSON = null;
-
-      await fetch("./geojson/china.json")
-        .then((res) => {
-          return res.json();
-        })
-        .then((data) => {
-          geoJSON = data;
-        });
+      let geoJSON = await fetch("./geojson/china.json").then((res) => res.json());
 
       let camera, scene, renderer, controls, composer;
       let labelRenderer;
@@ -177,7 +169,7 @@
                 });
               });
             },
-          }
+          },
         );
         timeline.to(map.scale, {
           x: 1,
@@ -199,7 +191,7 @@
                 });
               });
             },
-          }
+          },
         );
         timeline.call(() => camera.layers.enable(1));
       }
@@ -331,7 +323,7 @@
           });
           const plane = new THREE.Mesh(planeGeometry, planeMaterial);
           // plane.position.set(-2, -3, 0.1); // 加了会导致plane在一定角度下消失
-          plane.scale.set(0, 0, 0);
+          plane.scale.set(0, 0, 0); // 初始动画，初始是0（不展示）
           plane.name = "ROTATE_PLANE";
           plane.userData.type = name;
           scene.add(plane);
