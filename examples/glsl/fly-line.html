@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>效果</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      // 1. 初始化场景相机渲染器
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 80;
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      const axisHelper = new THREE.AxesHelper(50);
+      scene.add(axisHelper);
+
+      // 2. 自定义流光飞线着色器（核心）
+      const FlyLineShader = {
+        uniforms: {
+          uColor: { value: new THREE.Color(0x00ffff) },
+          uSpeed: { value: 0.4 },
+          uTime: { value: 0 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main(){
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uTime;
+          uniform float uSpeed;
+          varying vec2 vUv; // [0, 1]
+
+          void main(){
+            // 流光偏移
+            float offset = mod(vUv.x + uTime * uSpeed, 1.0);
+            // 头部高亮渐变，尾部衰减
+            float alpha = 1.0 - smoothstep(0.0,0.4,offset);
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `,
+      };
+
+      // 3. 创建单条飞线函数
+      function createFlyLine(start, end, height = 10) {
+        // 贝塞尔控制点，向上抬高形成弧线
+        const midPoint = new THREE.Vector3(
+          (start.x + end.x) / 2,
+          (start.y + end.y) / 2 + height,
+          (start.z + end.z) / 2,
+        );
+        // 生成贝塞尔曲线
+        const curve = new THREE.QuadraticBezierCurve3(start, midPoint, end);
+        // 采样曲线顶点，分段越多线条越平滑
+        const points = curve.getPoints(100);
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+
+        // 绑定uv用于流光偏移
+        const uvArr = [];
+        for (let i = 0; i < points.length; i++) {
+          uvArr.push(i / points.length);
+        }
+        geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvArr, 1));
+
+        // 着色器材质
+        const mat = new THREE.ShaderMaterial({
+          uniforms: THREE.UniformsUtils.clone(FlyLineShader.uniforms),
+          vertexShader: FlyLineShader.vertexShader,
+          fragmentShader: FlyLineShader.fragmentShader,
+          transparent: true,
+          depthWrite: false,
+        });
+        const line = new THREE.Line(geo, mat);
+        scene.add(line);
+        return line;
+      }
+
+      // 4. 批量生成多条飞线测试
+      const flyLines = [];
+      for (let i = 0; i < 1; i++) {
+        const s = new THREE.Vector3((Math.random() - 0.5) * 50, 0, (Math.random() - 0.5) * 60);
+        const e = new THREE.Vector3((Math.random() - 0.5) * 50, 0, (Math.random() - 0.5) * 60);
+        flyLines.push(createFlyLine(s, e, Math.random() * 8 + 5));
+      }
+
+      // 地面辅助网格
+      const grid = new THREE.GridHelper(60, 20, 0x222222, 0x111111);
+      scene.add(grid);
+
+      // 5. 渲染循环更新时间，驱动流光动画
+      function render(time) {
+        requestAnimationFrame(render);
+        const t = time * 0.001;
+        flyLines.forEach((line) => {
+          line.material.uniforms.uTime.value = t;
+        });
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      render();
+
+      // 窗口自适应
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
