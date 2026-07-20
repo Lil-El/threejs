@@ -33,7 +33,7 @@
     <div id="three-canvas"></div>
 
     <script src="https://webapi.amap.com/loader.js"></script>
-    <!-- GLCustomLayer 只支持 three.js 142 版本的 WebGL1，高版本threejs采用 WebGL2 -->
+    <!--【r163】GLCustomLayer 只支持低版本的 WebGL1，高版本 three.js 采用 WebGL2 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.142/build/three.js"></script>
     <script src="//webapi.amap.com/maps?v=2.0&key=9ec68095ef6c6bce0346aed898e46153"></script>
     <script src="/node_modules/gsap/dist/gsap.js"></script>
@@ -135,8 +135,66 @@
             map.name = "MAP";
             scene.add(map);
 
+            createBaseMap(map, data);
             createLand(map, data);
             createBoundary(map, data);
+          }
+
+          function createBaseMap(map, data) {
+            let minX = Infinity,
+              maxX = -Infinity;
+            let minY = Infinity,
+              maxY = -Infinity;
+
+            data.features.forEach((feature) => {
+              if (feature.type === "Feature") {
+                const { geometry } = feature;
+                const { type, coordinates } = geometry;
+
+                const extractPoints = (coords) => {
+                  coords.forEach((ring) => {
+                    ring.forEach((point) => {
+                      const [p] = customCoords.lngLatsToCoords([point]);
+                      const [x, y] = p;
+                      minX = Math.min(minX, x);
+                      maxX = Math.max(maxX, x);
+                      minY = Math.min(minY, y);
+                      maxY = Math.max(maxY, y);
+                    });
+                  });
+                };
+
+                if (type === "MultiPolygon") {
+                  coordinates.forEach(extractPoints);
+                } else if (type === "Polygon") {
+                  extractPoints(coordinates);
+                }
+              }
+            });
+
+            const width = maxX - minX;
+            const height = maxY - minY;
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+
+            const geometry = new THREE.PlaneGeometry(width, height);
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load("./assets/shaanxi.png", (loadedTexture) => {
+              loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
+              loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+            });
+
+            const material = new THREE.MeshStandardMaterial({
+              map: texture,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 1,
+            });
+
+            const basePlane = new THREE.Mesh(geometry, material);
+            basePlane.position.set(centerX, centerY, 19991);
+            basePlane.name = "BASE_MAP";
+            map.add(basePlane);
           }
 
           function createLand(map, data) {
@@ -203,7 +261,7 @@
 
             const geometry = new THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false });
             const surfaceMaterial = new THREE.MeshStandardMaterial({ color, side: THREE.FrontSide });
-            const sideMaterial = new THREE.MeshLambertMaterial({ color: "#d0e1f5", side: THREE.FrontSide });
+            const sideMaterial = new THREE.MeshLambertMaterial({ color: "#4bc3ff", side: THREE.FrontSide });
             const mesh = new THREE.Mesh(geometry, [surfaceMaterial, sideMaterial]);
             mesh.castShadow = true;
 
@@ -212,21 +270,103 @@
 
           function createPolyline(polyline) {
             const vertices = [];
+            const distances = [];
 
             polyline.forEach((ring) => {
+              let distance = 0;
+              let prevPoint = null;
+
               ring.forEach((point) => {
                 const [p] = customCoords.lngLatsToCoords([point]);
                 const [x, y] = p;
-                vertices.push(new THREE.Vector3(x, y, 0));
+
+                const current = new THREE.Vector3(x, y, 0);
+
+                vertices.push(current);
+
+                if (prevPoint) {
+                  distance += prevPoint.distanceTo(current);
+                }
+
+                distances.push(distance);
+
+                prevPoint = current;
               });
             });
 
             const geometry = new THREE.BufferGeometry();
+
             geometry.setFromPoints(vertices);
 
-            const material = new THREE.LineBasicMaterial({ color: 0x25a2b3 });
+            geometry.setAttribute("distance", new THREE.BufferAttribute(new Float32Array(distances), 1));
+
+            const material = new THREE.ShaderMaterial({
+              uniforms: {
+                uTime: {
+                  value: 0,
+                },
+                uSpeed: {
+                  value: 1000.0,
+                },
+                uGlowColor: {
+                  value: new THREE.Color(0x00ffff),
+                },
+                uBaseColor: {
+                  value: new THREE.Color(0xeeeeee),
+                },
+                // 光带长度
+                uGlowWidth: {
+                  value: 200000,
+                },
+                // 强度
+                uGlowIntensity: {
+                  value: 2.0,
+                },
+              },
+
+              vertexShader: `
+                attribute float distance;
+                varying float vDistance;
+                void main() {
+                  vDistance = distance;
+                  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+              `,
+
+              fragmentShader: `
+                uniform float uTime;
+                uniform float uSpeed;
+                uniform vec3 uGlowColor;
+                uniform vec3 uBaseColor;
+                uniform float uGlowWidth;
+                uniform float uGlowIntensity;
+                varying float vDistance;
+                void main() {
+                  // 当前位置
+                  float current = mod(uTime * uSpeed, 4924257.0);
+
+                  // 当前点距离光带中心距离
+                  float d = abs(vDistance - current);
+
+                  // 光晕
+                  float glow = 1.0 - smoothstep(0.0, uGlowWidth, d);
+
+                  vec3 color = mix(uBaseColor, uGlowColor, glow * uGlowIntensity);
+
+                  float alpha = glow + 0.1;
+
+                  gl_FragColor = vec4(color, alpha);
+                }
+              `,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+            });
 
             const line = new THREE.Line(geometry, material);
+
+            line.userData.isGlowLine = true;
 
             return line;
           }
@@ -259,6 +399,12 @@
           // camera.position.set(...position);
           // camera.updateProjectionMatrix();
 
+          scene.traverse((child) => {
+            if (child.userData.isGlowLine && child.material && child.material.uniforms) {
+              child.material.uniforms.uTime.value = performance.now();
+            }
+          });
+
           renderer.render(scene, camera);
 
           // 这里必须执行！！重新设置 three 的 gl 上下文状态。
@@ -280,10 +426,6 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
       window.addEventListener("resize", onWindowResize);
-
-      map.on("click", (e) => {
-        console.log(e);
-      });
 
       setTimeout(() => {
         initialAnimation();
