@@ -376,7 +376,7 @@
           renderer.resetState();
           // 重新设置图层的渲染中心点，将模型等物体的渲染中心点重置
           // 否则和 LOCA 可视化等多个图层能力使用的时候会出现物体位置偏移的问题
-          customCoords.setCenter([116.52, 39.79]);
+          customCoords.setCenter(window.center);
           var { near, far, fov, up, lookAt, position } = customCoords.getCameraParams();
 
           // 2D 地图下使用的正交相机

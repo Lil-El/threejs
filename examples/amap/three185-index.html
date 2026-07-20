@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #amap-canvas {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="amap-canvas"></div>
+
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <!--【r163】GLCustomLayer 只支持低版本的 WebGL1，高版本 three.js 采用 WebGL2 -->
+    <script src="//webapi.amap.com/maps?v=2.0&key=9ec68095ef6c6bce0346aed898e46153"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/",
+          "Line2": "/node_modules/three/examples/jsm/lines/Line2.js",
+          "gsap": "/node_modules/gsap/dist/gsap.js"
+        }
+      }
+    </script>
+
+    <script aria-label="Config">
+      window.center = [109.125276, 34.65467];
+      window.depth = 10000; // 深 1w 米
+      window.provincePositionZ = 10000; // 省份高出 1w 米
+      window.linePositionZ = 20000; // 省份行政界线高出 2w 米
+      window._AMapSecurityConfig = {
+        securityJsCode: "88e7ca58ee7e98a0343e28ecf4f2b906",
+      };
+    </script>
+    <script aria-label="高德地图 + three.js + CustomLayer" type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+
+      import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+      import { RenderPass } from "three/addons/postprocessing/RenderPass.js"; // 引入OutlinePass通道
+      import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js"; // 引入UnrealBloomPass通道
+      import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+      import { GlitchPass } from "three/addons/postprocessing/GlitchPass.js";
+
+      let map;
+      let camera, scene, renderer, controls, composer;
+      let cube;
+
+      createWorld();
+
+      map = window.map = new AMap.Map("amap-canvas", {
+        center: window.center,
+        zooms: [4, 8],
+        zoom: 5,
+        viewMode: "3D",
+        mapStyle: "amap://styles/c70a9d2b3ba718227f5de60c61cb5085",
+      });
+
+      const customCoords = map.customCoords;
+
+      const customLayer = new AMap.CustomLayer(renderer.domElement, {
+        zIndex: 10,
+      });
+
+      customLayer.render = onRender;
+      customLayer.setMap(map);
+
+      function onRender() {
+        if (!map) return;
+
+        renderer.resetState();
+
+        map.customCoords.setCenter(window.center);
+
+        const cameraParams = map.customCoords.getCameraParams();
+
+        camera.near = cameraParams.near;
+        camera.far = cameraParams.far;
+        camera.fov = cameraParams.fov;
+        camera.position.set(...cameraParams.position);
+        camera.up.set(...cameraParams.up);
+        camera.lookAt(...cameraParams.lookAt);
+        camera.updateProjectionMatrix();
+
+        renderer.resetState();
+        renderer.render(scene, camera);
+      }
+
+      function createWorld() {
+        // 创建场景
+        scene = new THREE.Scene();
+        scene.background = null;
+
+        // 创建相机
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 85);
+        camera.up.set(0, 0, 1);
+
+        // 创建渲染器
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        // renderer.autoClear = false; // 绝对不要加，否则在位置以外仍然异常展示 object
+
+        // 创建控制器
+        controls = new OrbitControls(camera, renderer.domElement);
+        // 添加光源
+        const light = new THREE.AmbientLight(0xffffff, 2.4);
+        scene.add(light);
+
+        fetch("./geojson/shaanxi.geojson")
+          .then((res) => res.json())
+          .then((data) => createMap(data));
+
+        function createMap(data) {
+          const map = new THREE.Group();
+          map.name = "MAP";
+          scene.add(map);
+
+          createLand(map, data);
+          createBoundary(map, data);
+        }
+
+        function createLand(map, data) {
+          data.features.forEach((feature) => {
+            const group = new THREE.Group();
+            group.name = "PROVINCE";
+
+            if (feature.type === "Feature") {
+              const { geometry } = feature;
+              const { type, coordinates } = geometry;
+
+              if (type === "MultiPolygon") {
+                coordinates.forEach((polygon) => {
+                  group.add(createPolygon("#020423", polygon));
+                });
+              } else if (type === "Polygon") {
+                group.add(createPolygon("#020423", coordinates));
+              }
+            }
+            group.position.z = 1;
+
+            map.add(group);
+          });
+        }
+
+        function createBoundary(map, data) {
+          data.features.forEach((feature) => {
+            const group = new THREE.Group();
+            group.name = "BOUNDARY";
+
+            if (feature.type === "Feature") {
+              const { geometry } = feature;
+              const { type, coordinates } = geometry;
+
+              if (type === "MultiPolygon") {
+                coordinates.forEach((polygon) => {
+                  group.add(createPolyline(polygon));
+                });
+              } else if (type === "Polygon") {
+                group.add(createPolyline(coordinates));
+              }
+            }
+            group.position.z = 2;
+
+            map.add(group);
+          });
+        }
+
+        function createPolygon(color, polygon) {
+          const shape = new THREE.Shape();
+
+          polygon.forEach((ring) => {
+            ring.forEach((point) => {
+              const [p] = customCoords.lngLatsToCoords([point]);
+              const [x, y] = p;
+              shape.moveTo(x, y);
+              shape.lineTo(x, y);
+            });
+
+            shape.closePath();
+          });
+
+          shape.closePath();
+
+          const geometry = new THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false });
+          const surfaceMaterial = new THREE.MeshStandardMaterial({ color, side: THREE.FrontSide });
+          const sideMaterial = new THREE.MeshLambertMaterial({ color: "#4bc3ff", side: THREE.FrontSide });
+          const mesh = new THREE.Mesh(geometry, [surfaceMaterial, sideMaterial]);
+          mesh.castShadow = true;
+
+          return mesh;
+        }
+
+        function createPolyline(polyline) {
+          const vertices = [];
+          const distances = [];
+
+          polyline.forEach((ring) => {
+            let distance = 0;
+            let prevPoint = null;
+
+            ring.forEach((point) => {
+              const [p] = customCoords.lngLatsToCoords([point]);
+              const [x, y] = p;
+
+              const current = new THREE.Vector3(x, y, 0);
+
+              vertices.push(current);
+
+              if (prevPoint) {
+                distance += prevPoint.distanceTo(current);
+              }
+
+              distances.push(distance);
+
+              prevPoint = current;
+            });
+          });
+
+          const geometry = new THREE.BufferGeometry();
+
+          geometry.setFromPoints(vertices);
+
+          geometry.setAttribute("distance", new THREE.BufferAttribute(new Float32Array(distances), 1));
+
+          const material = new THREE.ShaderMaterial({
+            uniforms: {
+              uTime: {
+                value: 0,
+              },
+              uSpeed: {
+                value: 1000.0,
+              },
+              uGlowColor: {
+                value: new THREE.Color(0x00ffff),
+              },
+              uBaseColor: {
+                value: new THREE.Color(0xeeeeee),
+              },
+              // 光带长度
+              uGlowWidth: {
+                value: 200000,
+              },
+              // 强度
+              uGlowIntensity: {
+                value: 2.0,
+              },
+            },
+
+            vertexShader: `
+                attribute float distance;
+                varying float vDistance;
+                void main() {
+                  vDistance = distance;
+                  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+              `,
+
+            fragmentShader: `
+                uniform float uTime;
+                uniform float uSpeed;
+                uniform vec3 uGlowColor;
+                uniform vec3 uBaseColor;
+                uniform float uGlowWidth;
+                uniform float uGlowIntensity;
+                varying float vDistance;
+                void main() {
+                  // 当前位置
+                  float current = mod(uTime * uSpeed, 4924257.0);
+
+                  // 当前点距离光带中心距离
+                  float d = abs(vDistance - current);
+
+                  // 光晕
+                  float glow = 1.0 - smoothstep(0.0, uGlowWidth, d);
+
+                  vec3 color = mix(uBaseColor, uGlowColor, glow * uGlowIntensity);
+
+                  float alpha = glow + 0.1;
+
+                  gl_FragColor = vec4(color, alpha);
+                }
+              `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          });
+
+          const line = new THREE.Line(geometry, material);
+
+          line.userData.isGlowLine = true;
+
+          return line;
+        }
+      }
+
+      function animate() {
+        renderer.render(scene, camera);
+
+        scene.traverse((child) => {
+          if (child.userData.isGlowLine && child.material && child.material.uniforms) {
+            child.material.uniforms.uTime.value = performance.now();
+          }
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
