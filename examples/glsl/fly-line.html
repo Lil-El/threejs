@@ -105,7 +105,7 @@
 
       // 4. 批量生成多条飞线测试
       const flyLines = [];
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < 10; i++) {
         const s = new THREE.Vector3((Math.random() - 0.5) * 50, 0, (Math.random() - 0.5) * 60);
         const e = new THREE.Vector3((Math.random() - 0.5) * 50, 0, (Math.random() - 0.5) * 60);
         flyLines.push(createFlyLine(s, e, Math.random() * 8 + 5));

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>效果</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      // 1. 初始化场景相机渲染器
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(40, 40, 40);
+      camera.up.set(0, 0, 1);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      const controls = new OrbitControls(camera, renderer.domElement);
+
+      const axisHelper = new THREE.AxesHelper(50);
+      scene.add(axisHelper);
+
+      // 2. 自定义流光飞线着色器（核心）
+      const Shader = {
+        uniforms: {
+          uColor: { value: new THREE.Color(0xff6600) },
+          uRadius: { value: 1.0 }, // 当前波纹半径
+          uMaxRadius: { value: 8.0 }, // 最大扩散半径
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main(){
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uRadius;
+          uniform float uMaxRadius;
+          varying vec2 vUv;
+
+          void main(){
+            vec2 center = vec2(0.5);
+            float dist = length(vUv - center) * 10.0;
+
+            float wave = smoothstep(0.0, uRadius, dist) + 0.1;
+
+            if (wave > 1.0) discard;
+            // wave = 1.0 - wave;
+            wave = pow(wave, 2.0);
+
+            gl_FragColor = vec4(uColor, wave);
+          }
+        `,
+      };
+
+      let plane;
+
+      // 3. 创建
+      function createPlane() {
+        const geo = new THREE.PlaneGeometry(10, 10);
+        const mat = new THREE.ShaderMaterial({
+          uniforms: THREE.UniformsUtils.clone(Shader.uniforms),
+          vertexShader: Shader.vertexShader,
+          fragmentShader: Shader.fragmentShader,
+          transparent: true,
+          depthWrite: false,
+        });
+        plane = new THREE.Mesh(geo, mat);
+        plane.position.z = 0.1;
+        scene.add(plane);
+      }
+
+      // 4. 生成
+      createPlane();
+
+      // 地面辅助网格
+      const grid = new THREE.GridHelper(50, 50, 0x333333, 0x333333);
+      grid.rotation.x = Math.PI / 2; // 绕 x 轴旋转 90 度
+      scene.add(grid);
+
+      // 5. 渲染循环更新时间，驱动流光动画
+      function render(time) {
+        requestAnimationFrame(render);
+        const t = time * 0.001;
+        plane.material.uniforms.uRadius.value = (t % 1.2) * 4.5;
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      render();
+
+      // 窗口自适应
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
